@@ -2,6 +2,21 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.2.0] - 2026-11-05
+
+### Ditambahkan
+
+- Footer aplikasi berisi nama aplikasi dan keterangan versi.
+- Kolom Kota di Pengaturan Pejabat: tercetak di atas tanda tangan pimpinan pada Buku Agenda dan Rekap, diikuti tanggal hari pencetakan. Semua hasil cetak (agenda, rekap, lembar disposisi) berfooter tanggal dan jam cetak mengikuti zona waktu, dan tanggal cetak tampil dalam format panjang Bahasa Indonesia.
+- Konfirmasi untuk aksi Keluar, Hapus Logo Kop, dan Nonaktifkan Pengguna.
+- Integrasi Cloudflare Workers Builds: push ke branch main otomatis men-deploy Worker (build `node build.mjs`, deploy `npx wrangler deploy`, konfigurasi di `wrangler.toml`).
+
+### Diperbaiki
+
+- Header pada tampilan mobile: nama instansi tidak lagi membuat breadcrumb turun dua baris; header menjadi satu baris berisi tombol menu, judul halaman, dan avatar.
+- Daftar berkas pada halaman detail surat di layar HP: nama berkas tampil penuh selebar baris dan tombol aksi menumpuk rapi di bawahnya; sebelumnya nama berkas terjepit sempit dan tombol menimpa teks.
+- Tabel Disposisi pada layar HP berupa tabel yang dapat digeser ke samping seperti daftar surat, sesuai keputusan pengguna bahwa kartu bertumpuk terlalu besar.
+
 ## [1.0.0] - 2026-11-05
 
 Rilis publik pertama.
@@ -20,9 +35,6 @@ Rilis publik pertama.
 - Kolom Tanggal Agenda tersendiri di daftar surat.
 - Fitur bantu operator: tombol unggah cepat untuk surat tanpa berkas, tombol Batalkan sesudah memindah surat ke sampah, teks bantu formulir dengan penanda wajib, chip filter aktif, pencarian gabungan, dan penanda tenggat disposisi.
 - Migrasi database berurutan di `database/migrations/` dan contoh konfigurasi Wrangler.
-- Footer aplikasi berisi nama aplikasi dan keterangan versi.
-- Kolom Kota di Pengaturan Pejabat: tercetak di atas tanda tangan pimpinan pada Buku Agenda dan Rekap, diikuti tanggal hari pencetakan. Semua hasil cetak (agenda, rekap, lembar disposisi) berfooter tanggal dan jam cetak mengikuti zona waktu, dan tanggal cetak tampil dalam format panjang Bahasa Indonesia.
-- Konfirmasi untuk aksi Keluar, Hapus Logo Kop, dan Nonaktifkan Pengguna.
 
 ### Diubah
 
@@ -38,9 +50,6 @@ Rilis publik pertama.
 - Pagination Tempat Sampah yang sebelumnya tidak konsisten.
 - Pagination halaman Audit.
 - Tombol menu pada tampilan mobile agar selalu terlihat dan mudah ditekan.
-- Header pada tampilan mobile: nama instansi tidak lagi membuat breadcrumb turun dua baris; header menjadi satu baris berisi tombol menu, judul halaman, dan avatar.
-- Daftar berkas pada halaman detail surat di layar HP: nama berkas tampil penuh selebar baris dan tombol aksi menumpuk rapi di bawahnya; sebelumnya nama berkas terjepit sempit dan tombol menimpa teks.
-- Tabel Disposisi pada layar HP berubah menjadi kartu bertumpuk berlabel (Kepada, Instruksi, Batas) dengan tombol aksi yang terjangkau; sebelumnya tabel terpotong di luar layar.
 
 ## [0.1.0] - 2026-11-05
 
