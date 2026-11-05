@@ -2,6 +2,14 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.3.1] - 2026-11-05
+
+### Diubah
+
+- Cetakan Buku Agenda kini memakai kertas A4 landscape agar seluruh kolom muat lega; cetakan lain (Rekap, Lembar Disposisi) tidak berubah.
+- Huruf tabel agenda seragam 11 pt di semua sel, dengan lebar kolom tetap yang disesuaikan untuk landscape (Nomor Agenda 6%, Tanggal Surat 8.5%, Tanggal Agenda 8.5%, Nomor Surat 17%, Tujuan/Asal Surat 18.5%, Perihal 14.5%, Klasifikasi 10%, Sifat 7%, Penanda Tangan/Status Disposisi 10%).
+- Baris kepala tabel agenda kini berulang otomatis di setiap halaman lanjutan.
+
 ## [1.3.0] - 2026-11-05
 
 ### Diubah
