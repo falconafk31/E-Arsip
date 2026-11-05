@@ -2,6 +2,20 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.2.2] - 2026-11-05
+
+### Ditambahkan
+
+- Pengaturan Pejabat: kolom Nama Petugas Tata Usaha dan NIP Petugas Tata Usaha. Nama petugas pada blok tanda tangan cetakan kini diambil dari pengaturan ini (bila kosong, memakai nama pengguna yang mencetak).
+
+### Diubah
+
+- Buku Agenda di layar dan pada cetakan menampilkan Nomor Agenda dan Nomor Surat sebagai dua kolom terpisah, sehingga nomor asli surat dari pengirim selalu terlihat di samping nomor agenda register.
+- Judul cetakan Buku Agenda mengikuti filter jenis: Buku Agenda Surat Masuk atau Buku Agenda Surat Keluar; kolom Jenis pada tabel cetakan disembunyikan bila isinya sudah satu jenis.
+- Blok tanda tangan cetakan Buku Agenda dan Rekap: sisi kanan menjadi "Mengetahui, Kepala Madrasah" tanpa baris tanggal; tanggal hanya tampil satu kali di sisi Petugas Tata Usaha.
+- Nama penanda tangan pada cetakan digarisbawahi tanpa garis tanda tangan di atasnya, menyisakan ruang kosong untuk tanda tangan basah.
+- Footer "Dicetak pada ..." dihilangkan dari semua hasil cetak.
+
 ## [1.2.1] - 2026-11-05
 
 ### Diperbaiki

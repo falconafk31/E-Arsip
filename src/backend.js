@@ -19,7 +19,7 @@ function jamZona(st) { const o = nowZona(st); const p = (n) => String(n).padStar
 function barisKotaTgl(st) { const t = tglPanjang(st); return st && st.kota ? esc(st.kota) + ", " + t : t; }
 const BLN_PDK = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 function tglCtk(iso) { if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(String(iso))) return iso || "-"; const p = String(iso).slice(0, 10).split("-"); return parseInt(p[2], 10) + " " + BLN_PDK[parseInt(p[1], 10) - 1] + " " + p[0]; }
-function kakiCetak(st) { return `<div class="cetak-info">Dicetak pada ${esc(tglPanjang(st))} pukul ${esc(jamZona(st))}</div>`; }
+function kakiCetak(st) { return ""; }
 function isRahasia(s) { return String(s?.sifat || "").toLowerCase() === "rahasia"; }
 function canSeeRahasia(u) { return u && ["admin", "petugas", "pimpinan"].includes(u.role); }
 function maskSurat(u, s) {
@@ -516,7 +516,7 @@ function rekapCsv(kind, data, rows) {
 
 function printShell(title, kop, body, kaki) {
   return `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>${esc(title)}</title>
-<style>body{font-family:Georgia,serif;color:#111;max-width:900px;margin:24px auto;padding:0 20px}table{width:100%;border-collapse:collapse;font-size:12px;font-family:Arial,sans-serif;margin-top:14px}th,td{border:1px solid #666;padding:6px 7px;text-align:left;vertical-align:top}th{background:#eee}h1{font-size:17px;text-align:center;margin:18px 0 2px}.sub{text-align:center;font-size:12px;color:#444}.ttd{display:flex;justify-content:space-between;margin-top:36px;font-family:Arial,sans-serif;font-size:12px}.ttd div{width:220px;text-align:center}.ttd .nm{margin-top:64px;border-top:1px solid #111;padding-top:4px}.cetak-info{margin-top:30px;text-align:right;font-family:Arial,sans-serif;font-size:10px;color:#555}@media print{body{margin:0}}</style></head>
+<style>body{font-family:Georgia,serif;color:#111;max-width:900px;margin:24px auto;padding:0 20px}table{width:100%;border-collapse:collapse;font-size:12px;font-family:Arial,sans-serif;margin-top:14px}th,td{border:1px solid #666;padding:6px 7px;text-align:left;vertical-align:top}th{background:#eee}h1{font-size:17px;text-align:center;margin:18px 0 2px}.sub{text-align:center;font-size:12px;color:#444}.ttd{display:flex;justify-content:space-between;margin-top:36px;font-family:Arial,sans-serif;font-size:12px}.ttd div{width:220px;text-align:center}.ttd .nm{margin-top:64px;font-weight:700;text-decoration:underline}.cetak-info{margin-top:30px;text-align:right;font-family:Arial,sans-serif;font-size:10px;color:#555}@media print{body{margin:0}}</style></head>
 <body>${kop}<h1>${esc(title)}</h1>${body}${kaki || ""}<script>window.onload=function(){setTimeout(function(){window.print()},300)}</script></body></html>`;
 }
 async function cetakAgenda(req, env, user) {
@@ -529,11 +529,12 @@ async function cetakAgenda(req, env, user) {
   const stA = await getSettings(env);
   const { results } = await env.DB.prepare(`SELECT * FROM surat WHERE ${where} ORDER BY tanggal_agenda, id`).bind(...binds).all();
   const periode = bulan ? `Periode ${BULAN_NAMA[parseInt(bulan.slice(5, 7), 10) - 1]} ${bulan.slice(0, 4)}` : tahun ? `Periode Tahun ${tahun}` : "Semua Periode";
-  const rows = results.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(tglCtk(r.tanggal_agenda))}</td><td>${r.jenis === "masuk" ? "Masuk" : "Keluar"}</td><td>${esc(maskSurat(user, r).nomor_agenda || maskSurat(user, r).nomor_surat)}</td><td>${esc(r.asal || r.tujuan || "-")}</td><td>${esc(maskSurat(user, r).perihal)}</td></tr>`).join("");
-  const body = `<div class="sub">BUKU AGENDA SURAT - ${esc(periode)} - dicetak oleh ${esc(user.nama)} pada ${esc(tglPanjang(stA))}</div>
-  <table><thead><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Nomor</th><th>Asal / Tujuan</th><th>Perihal</th></tr></thead><tbody>${rows || '<tr><td colspan="6">Tidak ada data</td></tr>'}</tbody></table>
-  <div class="ttd"><div>${barisKotaTgl(stA)}<br>Petugas Tata Usaha<div class="nm">${esc(user.nama)}</div></div><div>${barisKotaTgl(stA)}<br>Kepala Sekolah / Pimpinan<div class="nm">${stA.nama_kepala ? esc(stA.nama_kepala) : "( nama pimpinan )"}${stA.nip_kepala ? `<br><span style="font-weight:400;font-size:11px">NIP. ${esc(stA.nip_kepala)}</span>` : ""}</div></div></div>`;
-  return new Response(printShell("Buku Agenda Surat", await kopHtml(env), body, kakiCetak(stA)), { headers: { "Content-Type": "text/html; charset=utf-8" } });
+  const judul = jenis === "masuk" ? "Buku Agenda Surat Masuk" : jenis === "keluar" ? "Buku Agenda Surat Keluar" : "Buku Agenda Surat";
+  const rows = results.map((r, i) => { const m = maskSurat(user, r); return `<tr><td>${i + 1}</td><td>${esc(tglCtk(r.tanggal_agenda))}</td>${jenis ? "" : `<td>${r.jenis === "masuk" ? "Masuk" : "Keluar"}</td>`}<td>${esc(m.nomor_agenda || "-")}</td><td>${esc(m.nomor_surat)}</td><td>${esc(r.asal || r.tujuan || "-")}</td><td>${esc(m.perihal)}</td></tr>`; }).join("");
+  const body = `<div class="sub">${esc(judul.toUpperCase())} - ${esc(periode)} - dicetak oleh ${esc(user.nama)} pada ${esc(tglPanjang(stA))}</div>
+  <table><thead><tr><th>No</th><th>Tanggal</th>${jenis ? "" : "<th>Jenis</th>"}<th>Nomor Agenda</th><th>Nomor Surat</th><th>Asal / Tujuan</th><th>Perihal</th></tr></thead><tbody>${rows || `<tr><td colspan="${jenis ? 6 : 7}">Tidak ada data</td></tr>`}</tbody></table>
+  <div class="ttd"><div>${barisKotaTgl(stA)}<br>Petugas Tata Usaha<div class="nm">${esc(stA.nama_petugas || user.nama)}</div>${stA.nip_petugas ? `<div>NIP. ${esc(stA.nip_petugas)}</div>` : ""}</div><div>Mengetahui,<br>Kepala Madrasah<div class="nm">${stA.nama_kepala ? esc(stA.nama_kepala) : "( nama pimpinan )"}${stA.nip_kepala ? `<br><span style="font-weight:400;font-size:11px">NIP. ${esc(stA.nip_kepala)}</span>` : ""}</div></div></div>`;
+  return new Response(printShell(judul, await kopHtml(env), body, kakiCetak(stA)), { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 async function cetakRekap(req, env, user) {
   const u = new URL(req.url);
@@ -558,7 +559,7 @@ async function cetakRekap(req, env, user) {
   <h1 style="text-align:left;font-size:14px">Rekap Per Klasifikasi</h1><table><thead><tr><th>Klasifikasi</th><th>Masuk</th><th>Keluar</th><th>Total</th></tr></thead><tbody>${klasRows}</tbody></table>
   <h1 style="text-align:left;font-size:14px">Rekap Per Sifat Surat</h1><table><thead><tr><th>Sifat</th><th>Masuk</th><th>Keluar</th><th>Total</th></tr></thead><tbody>${sifatRows}</tbody></table>
   <h1 style="text-align:left;font-size:14px">Ringkasan Disposisi</h1><table><thead><tr><th>Status</th><th>Jumlah</th></tr></thead><tbody>${dispRows || '<tr><td colspan="2">Tidak ada disposisi</td></tr>'}</tbody></table>
-  <div class="ttd"><div>${barisKotaTgl(stK)}<br>Petugas Tata Usaha<div class="nm">${esc(user.nama)}</div></div><div>${barisKotaTgl(stK)}<br>Kepala Sekolah / Pimpinan<div class="nm">${d.kepala.nama ? esc(d.kepala.nama) : "( nama pimpinan )"}${d.kepala.nip ? `<br><span style="font-weight:400;font-size:11px">NIP. ${esc(d.kepala.nip)}</span>` : ""}</div></div></div>`;
+  <div class="ttd"><div>${barisKotaTgl(stK)}<br>Petugas Tata Usaha<div class="nm">${esc(stK.nama_petugas || user.nama)}</div>${stK.nip_petugas ? `<div>NIP. ${esc(stK.nip_petugas)}</div>` : ""}</div><div>Mengetahui,<br>Kepala Madrasah<div class="nm">${d.kepala.nama ? esc(d.kepala.nama) : "( nama pimpinan )"}${d.kepala.nip ? `<br><span style="font-weight:400;font-size:11px">NIP. ${esc(d.kepala.nip)}</span>` : ""}</div></div></div>`;
   return new Response(printShell(`Rekap Arsip Surat Tahun ${tahun}`, await kopHtml(env), body, kakiCetak(stK)), { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 const BULAN_NAMA = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
@@ -852,7 +853,7 @@ export default {
       if (path === "/api/settings" && req.method === "PUT") {
         if (!isAdminRole(user)) return err("Hanya Admin yang bisa mengubah pengaturan dan kop surat", 403);
         const b = await req.json();
-        const allowed = ["kop_baris1", "kop_baris2", "kop_baris3", "kop_alamat", "kop_kontak", "kop_gaya_garis", "kop_ukuran_logo", "format_agenda_masuk", "nama_instansi", "nama_kepala", "nip_kepala", "zona_waktu", "kota"];
+        const allowed = ["kop_baris1", "kop_baris2", "kop_baris3", "kop_alamat", "kop_kontak", "kop_gaya_garis", "kop_ukuran_logo", "format_agenda_masuk", "nama_instansi", "nama_kepala", "nip_kepala", "nama_petugas", "nip_petugas", "zona_waktu", "kota"];
         for (const k of allowed) { if (!(k in b)) continue; if (k === "zona_waktu" && !["WIB", "WITA", "WIT"].includes(b[k])) continue; await env.DB.prepare("INSERT INTO settings (key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(k, String(b[k] ?? "")).run(); }
         await audit(env, user.id, "ubah", "settings", null, "pengaturan/kop");
         return json({ ok: true });
