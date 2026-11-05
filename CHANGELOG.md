@@ -2,6 +2,13 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.3.3] - 2026-11-05
+
+### Diubah
+
+- Navigasi jauh lebih ringan: data hasil pengambilan (GET) kini diingat sementara di sisi aplikasi sehingga menu yang sudah pernah dibuka tampil seketika tanpa menunggu server; ingatan otomatis dibersihkan setiap ada penambahan, perubahan, atau penghapusan data. Pengambilan awal aplikasi dan mode Triwulan Buku Agenda kini berjalan sejajar, bukan berurutan.
+- Animasi interaksi: efek tekan pada tombol, menu, dan tab; transisi masuk setiap halaman; kotak dialog muncul dengan animasi; dan kerangka berkilau (skeleton) saat memuat data menggantikan teks "Memuat data...".
+
 ## [1.3.2] - 2026-11-05
 
 ### Diubah
