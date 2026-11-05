@@ -37,7 +37,7 @@ th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
     <div class="mn">
       <header class="top" id="topbar"></header>
       <main id="main"></main>
-      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.2.0</span></footer>
+      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.2.1</span></footer>
     </div>
   </div>
 </div>
@@ -180,8 +180,10 @@ async function viewBeranda() {
   let d; try { d = await api("/api/dashboard"); } catch (e) { $("#main").innerHTML = headPage("Beranda", "") + '<div class="card cb er">' + esc(e.message) + "</div>"; return; }
   const max = Math.max(1, ...d.per_bulan.map((b) => b.total || 0));
   let chart = '<div class="chart">';
-  for (const b of d.per_bulan) {
-    chart += '<div class="bc"><div class="bp"><div class="b" style="height:' + Math.max(4, Math.round(((b.total || 0) / max) * 100)) + '%"><span>' + (b.total || 0) + '</span></div></div><div class="bl">' + BULAN_ID[parseInt(b.bln, 10) - 1].slice(0, 3) + "</div></div>";
+  const sumbuBulan = []; { const kini = new Date(); for (let i = 5; i >= 0; i--) sumbuBulan.push(new Date(kini.getFullYear(), kini.getMonth() - i, 1).getMonth()); }
+  for (const m of sumbuBulan) {
+    const b = d.per_bulan.find((x) => parseInt(x.bln, 10) === m + 1) || { total: 0 };
+    chart += '<div class="bc"><div class="bp"><div class="b" style="height:' + Math.max(4, Math.round(((b.total || 0) / max) * 100)) + '%"><span>' + (b.total || 0) + '</span></div></div><div class="bl">' + BULAN_ID[m].slice(0, 3) + "</div></div>";
   }
   chart += "</div>";
   let peringatan = "";
@@ -331,7 +333,7 @@ async function viewDetail(id) {
     + (bisaUbah ? '<button class="btn sec" id="bUbah">' + ic("edit") + "Ubah</button>" : "")
     + (bisaUbah ? '<button class="btn dgo" id="bSampah">' + ic("trash") + "Pindah ke Sampah</button>" : "")
     + (s.jenis === "masuk" ? '<a class="btn sec" href="/cetak/disposisi/' + s.id + '" target="_blank">' + ic("print") + "Cetak Lembar Disposisi</a>" : ""))
-    + '<div class="g2"><div class="col"><div class="card"><div class="ch"><h2>Pratinjau Berkas</h2>' + badgeSifat(s.sifat) + '</div><div class="cb"><div class="pv" style="padding:0;background:none">' + preview + "</div></div></div>"
+    + '<div class="g2"><div class="col"><div class="card"><div class="ch"><h2>Pratinjau Berkas</h2>' + badgeSifat(s.sifat) + '</div><div class="cb">' + (pertama ? '<div class="pvbar"><span class="pvname">' + esc(pertama.nama_asli) + '</span><span class="acts"><a class="btn sec sm" href="/api/lampiran/' + pertama.id + '/file" target="_blank" rel="noopener">' + ic("eye") + 'Buka</a><a class="btn sec sm" href="/api/lampiran/' + pertama.id + '/file?dl=1">' + ic("download") + 'Unduh</a></span></div>' : "") + '<div class="pv" style="padding:0;background:none">' + preview + "</div></div></div>"
     + '<div class="card"><div class="ch"><h2>Berkas Surat</h2><span class="bd gr">' + berkasUtama.length + " / 5 berkas</span></div><div class=\"cb\">" + lamp
     + (bisaUbah ? '<button class="dz" id="bUpload"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Unggah Berkas Surat</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas" + (r2Aktif ? "" : " - upload belum aktif") + "</span></button>" : "") + "</div></div>"
     + (s.jenis === "keluar" ? '<div class="card"><div class="ch"><h2>Lampiran Pendukung</h2><span class="bd gr">' + berkasPendukung.length + ' berkas</span></div><div class="cb">' + lampPend + '<p class="mu" style="margin:10px 0">Bukti kegiatan dari surat ini, misalnya foto kegiatan dan daftar hadir. Gunakan nama berkas yang jelas, contoh: Daftar Hadir - Rapat Wali Murid.pdf</p>' + (bisaUbah ? '<button class="dz" id="bUploadPendukung"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Tambah Lampiran Pendukung</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas" + (r2Aktif ? "" : " - upload belum aktif") + "</span></button>" : "") + "</div></div>" : "")
@@ -550,7 +552,7 @@ async function imporGuru(file) {
 }
 
 /* ---------- buku agenda ---------- */
-const agState = { bulan: "", jenis: "", sort: "tanggal", dir: "asc", mode: "bulan" };
+const agState = { bulan: (() => { const t = new Date(); return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0"); })(), jenis: "", sort: "tanggal", dir: "asc", mode: "bulan" };
 async function viewAgenda() {
   $("#main").innerHTML = headPage("Buku Agenda", "Buku agenda resmi surat masuk dan surat keluar",
     '<button class="btn sec" id="agCsv">' + ic("download") + 'Unduh CSV</button><a class="btn" id="agPdf" target="_blank">' + ic("print") + "Cetak PDF</a>")
@@ -658,7 +660,7 @@ async function viewSampah() {
 
 /* ---------- audit (khusus admin) ---------- */
 const auditState = { q: "", aksi: "", page: 1, sort: "id", dir: "asc" };
-const AKSI_LABEL = { "login": ["Login", "pr"], "buat": ["Buat Surat", "ok"], "ubah": ["Ubah", "in"], "hapus-ke-sampah": ["Ke Sampah", "wn"], "hapus-permanen": ["Hapus Permanen", "dg"], "hapus": ["Hapus", "dg"], "unggah": ["Unggah", "in"], "lihat": ["Lihat File", "gr"], "unduh": ["Unduh File", "gr"], "disposisi-buat": ["Buat Disposisi", "ok"], "reset-password": ["Reset Password", "wn"], "ubah-pengguna": ["Ubah Pengguna", "in"], "disposisi-diproses": ["Disposisi Diproses", "in"], "disposisi-selesai": ["Disposisi Selesai", "ok"], "buat-guru": ["Buat Guru", "ok"], "ubah-guru": ["Ubah Guru", "in"], "impor-guru": ["Impor Guru", "ok"] };
+const AKSI_LABEL = { "login": ["Login", "pr"], "buat": ["Buat Surat", "ok"], "ubah": ["Ubah", "in"], "hapus-ke-sampah": ["Ke Sampah", "wn"], "hapus-permanen": ["Hapus Permanen", "dg"], "hapus": ["Hapus", "dg"], "unggah": ["Unggah", "in"], "lihat": ["Lihat File", "gr"], "unduh": ["Unduh File", "gr"], "disposisi-buat": ["Buat Disposisi", "ok"], "ganti-password": ["Ganti Password", "wn"], "reset-password": ["Reset Password", "wn"], "ubah-pengguna": ["Ubah Pengguna", "in"], "disposisi-diproses": ["Disposisi Diproses", "in"], "disposisi-selesai": ["Disposisi Selesai", "ok"], "buat-guru": ["Buat Guru", "ok"], "ubah-guru": ["Ubah Guru", "in"], "impor-guru": ["Impor Guru", "ok"] };
 async function viewAudit() {
   if (me.role !== "admin") { $("#main").innerHTML = headPage("Audit", "") + '<div class="card cb er">Halaman Audit hanya untuk Admin.</div>'; return; }
   $("#main").innerHTML = headPage("Audit", "Jejak aktivitas semua pengguna, urut dari yang paling awal tercatat")
@@ -789,8 +791,8 @@ async function setKlasifikasi() {
   $("#formKlas").onsubmit = async (e) => { e.preventDefault(); try { await api("/api/klasifikasi", { method: "POST", body: JSON.stringify({ nama: $("#klNama").value.trim() }) }); toast("Klasifikasi ditambahkan"); setKlasifikasi(); } catch (er) { toast(er.message, true); } };
 }
 function setPassword() {
-  $("#setBody").innerHTML = '<div class="card"><div class="ch"><h2>Ganti Password Saya</h2></div><div class="cb"><form id="formPw"><div class="fl"><label>Password Baru <span class="rq">minimal 8 karakter</span></label><input id="pwBaru" type="password" required minlength="8" autocomplete="new-password"></div><button class="btn" type="submit">' + ic("lock") + "Ganti Password</button></form></div></div>";
-  $("#formPw").onsubmit = async (e) => { e.preventDefault(); try { await api("/api/me/password", { method: "PUT", body: JSON.stringify({ password: $("#pwBaru").value }) }); toast("Password berhasil diganti untuk login berikutnya"); e.target.reset(); } catch (er) { toast(er.message, true); } };
+  $("#setBody").innerHTML = '<div class="card"><div class="ch"><h2>Ganti Password Saya</h2></div><div class="cb"><form id="formPw"><div class="fl"><label>Password Lama</label><input id="pwLama" type="password" required autocomplete="current-password"></div><div class="fl"><label>Password Baru <span class="rq">minimal 8 karakter</span></label><input id="pwBaru" type="password" required minlength="8" autocomplete="new-password"></div><div class="fl"><label>Ulangi Password Baru</label><input id="pwUlangi" type="password" required minlength="8" autocomplete="new-password"></div><button class="btn" type="submit">' + ic("lock") + "Ganti Password</button></form></div></div>";
+  $("#formPw").onsubmit = async (e) => { e.preventDefault(); if ($("#pwBaru").value !== $("#pwUlangi").value) { toast("Ulangi password baru tidak sama", true); return; } try { await api("/api/me/password", { method: "PUT", body: JSON.stringify({ lama: $("#pwLama").value, password: $("#pwBaru").value }) }); toast("Password berhasil diganti untuk login berikutnya"); e.target.reset(); } catch (er) { toast(er.message, true); } };
 }
 async function setUsers() {
   let users = []; try { users = (await api("/api/users")).items || []; } catch (e) { toast(e.message, true); }
