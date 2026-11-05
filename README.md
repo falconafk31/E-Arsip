@@ -105,7 +105,7 @@ Alternatif deploy memakai Wrangler: salin `wrangler.toml.example` menjadi `wrang
 
 ### Deploy otomatis dari GitHub (Cloudflare Workers Builds)
 
-Instance yang berjalan dari repo ini terhubung ke Cloudflare Workers Builds: setiap push ke branch `main` otomatis membangun dan men-deploy Worker `arsip-surat`. Pengaturan build di dashboard Cloudflare (Workers & Pages, Worker arsip-surat, Settings, Builds):
+Instance yang berjalan dari repo ini terhubung ke Cloudflare Workers Builds (aktif sejak 5 November 2026): setiap push ke branch `main` otomatis membangun dan men-deploy Worker `arsip-surat`. Pengaturan build di dashboard Cloudflare (Workers & Pages, Worker arsip-surat, Settings, Builds):
 
 - Build command: `node build.mjs` (merakit `worker.js` dari `src/`, setara `build.py`)
 - Deploy command: `npx wrangler deploy`
