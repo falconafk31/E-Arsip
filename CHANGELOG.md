@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.3.5] - 2026-11-05
+
+### Dihapus
+
+- Kartu "Buku Agenda PDF" (cetakan agenda gabungan masuk dan keluar) di menu Rekap Tahunan, atas keputusan Hades: sejak agenda resmi dipisah menjadi dua register, cetakan gabungan menimbulkan nomor agenda ganda dalam satu dokumen. Cetakan agenda per register tetap tersedia di menu Buku Agenda.
+
 ## [1.3.4] - 2026-11-05
 
 ### Diperbaiki
