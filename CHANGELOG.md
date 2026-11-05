@@ -2,6 +2,16 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.2.4] - 2026-11-05
+
+### Diubah
+
+- Posisi blok tanda tangan cetakan Buku Agenda dan Rekap ditukar mengikuti contoh dokumen resmi madrasah: Kepala Madrasah (dengan "Mengetahui,") kini di sebelah kiri, Petugas Tata Usaha beserta baris kota dan tanggal di sebelah kanan.
+
+### Diperbaiki
+
+- Menyegarkan (refresh) halaman kini tidak lagi kembali ke Beranda. Setiap menu tercatat pada alamat halaman (misalnya #/agenda, #/guru, #/detail/4), dan saat halaman dimuat ulang aplikasi membuka kembali menu yang tercatat itu.
+
 ## [1.2.3] - 2026-11-05
 
 ### Diperbaiki
