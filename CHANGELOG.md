@@ -2,6 +2,20 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.3.0] - 2026-11-05
+
+### Diubah
+
+- Buku Agenda menjadi satu menu dengan dua tab register: Surat Masuk dan Surat Keluar. Masing-masing tab memiliki tabel dengan kolom sesuai registernya (masuk: Tanggal Diterima dan Tanggal Surat, asal, status disposisi; keluar: Tanggal Surat dan Tanggal Agenda, tujuan, penandatangan) dan tombol Cetak mengikuti tab aktif.
+- Penomoran register diganti: awalan huruf dan tahun dihapus. Nomor register kini bernama Nomor Agenda berupa nomor urut polos 001, 002, 003, dan seterusnya, dengan urutan sendiri-sendiri per register dan per tahun.
+- Surat keluar sekarang juga menerima Nomor Agenda saat dicatat, sama seperti surat masuk. Nomor lama A-2026-0001 pada data yang sudah ada diubah menjadi 001, dan surat keluar yang sudah ada diberi nomor 001 pada registernya.
+- Cetakan Buku Agenda per register memuat dua tanggal (tanggal surat dan tanggal diterima/agenda) dengan judul Buku Agenda Surat Masuk atau Buku Agenda Surat Keluar.
+- Label nomor pada tampilan campuran (Beranda) kini lengkap: "Agenda Masuk 001" atau "Agenda Keluar 001"; daftar Disposisi menampilkan nomor agenda di bawah perihal.
+
+### Ditambahkan
+
+- Ringkasan Rekap Tahunan menampilkan Nomor Agenda terakhir per register (masuk dan keluar).
+
 ## [1.2.4] - 2026-11-05
 
 ### Diubah

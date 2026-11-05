@@ -212,3 +212,6 @@ input[type=range]{accent-color:var(--p)}
 
 /* Bilah nama berkas + aksi di atas pratinjau detail surat */
 .pvbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bd);flex-wrap:wrap}.pvname{font-weight:600;font-size:13px;overflow-wrap:anywhere}
+
+/* Tab register Buku Agenda */
+.agTabs{display:flex;gap:8px;padding:16px 18px 0;flex-wrap:wrap}.agTab{border:1px solid var(--bd);background:#fff;color:var(--tx);padding:8px 18px;border-radius:999px;font:600 13px Poppins,sans-serif;cursor:pointer}.agTab.on{background:var(--p);border-color:var(--p);color:#fff}

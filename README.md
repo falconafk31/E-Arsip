@@ -9,7 +9,7 @@ Catat surat dulu, berkas menyusul: nomor agenda terbit otomatis begitu surat dic
 ## Fitur utama
 
 **Surat masuk dan keluar**
-- Nomor agenda masuk otomatis per tahun (format A-2026-0001) dan peringatan nomor surat keluar ganda.
+- Nomor Agenda otomatis untuk surat masuk dan keluar (nomor urut 001, 002, ... terpisah per register dan per tahun) dan peringatan surat ganda.
 - Klasifikasi (Umum, Kurikulum, Kepegawaian, Keuangan, Sarana dan Prasarana, bisa ditambah), sifat surat Biasa/Penting/Segera/Rahasia, lokasi arsip fisik, dan penandatangan.
 - Filter status, sifat, bulan agenda, pencarian, dan sortir klik pada kepala kolom di semua tabel.
 

@@ -134,7 +134,7 @@ async function buatAgenda(env, jenis, tanggalAgenda) {
   const row = await env.DB.prepare(
     "INSERT INTO nomor_counter (tahun, jenis, terakhir) VALUES (?, ?, 1) ON CONFLICT(tahun, jenis) DO UPDATE SET terakhir=terakhir+1 RETURNING terakhir"
   ).bind(tahun, jenis).first();
-  return `A-${tahun}-${String(row.terakhir).padStart(4, "0")}`;
+  return String(row.terakhir).padStart(3, "0");
 }
 
 async function createSurat(req, env, user) {
@@ -147,7 +147,7 @@ async function createSurat(req, env, user) {
     "SELECT id, nomor_agenda FROM surat WHERE terhapus_pada IS NULL AND jenis=? AND nomor_surat=? AND COALESCE(asal,tujuan,'')=? LIMIT 1"
   ).bind(jenis, b.nomor_surat, pihak).first();
   let agenda = null;
-  if (jenis === "masuk") agenda = await buatAgenda(env, "masuk", b.tanggal_agenda);
+  agenda = await buatAgenda(env, jenis, b.tanggal_agenda);
   let indukId = null, jenisPenugasan = null;
   if (jenis === "keluar") {
     if (b.induk_id) { const ind = await env.DB.prepare("SELECT id FROM surat WHERE id=? AND jenis='masuk'").bind(parseInt(b.induk_id)).first(); if (ind) indukId = ind.id; }
@@ -492,7 +492,8 @@ async function rekapData(env, tahun) {
     `SELECT d.status, COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND substr(s.tanggal_agenda,1,4)=? GROUP BY d.status`).bind(tahun).all();
   const terlambat = await env.DB.prepare(
     `SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND substr(s.tanggal_agenda,1,4)=? AND d.status!='Selesai' AND d.batas_waktu IS NOT NULL AND d.batas_waktu < ?`).bind(tahun, todayWIB()).first();
-  return { tahun, totals, tanpa_scan: tanpaScan.c, tanpa_lokasi: tanpaLokasi.c, per_bulan: perBulan.results, per_klasifikasi: perKlas.results, per_sifat: perSifat.results, disposisi_status: disp.results, disposisi_terlambat: terlambat.c };
+  const agT = await env.DB.prepare("SELECT jenis, terakhir FROM nomor_counter WHERE tahun=?").bind(parseInt(tahun, 10)).all(); const agendaTerakhir = { masuk: 0, keluar: 0 }; for (const r of agT.results) agendaTerakhir[r.jenis] = r.terakhir;
+  return { tahun, totals, agenda_terakhir: agendaTerakhir, tanpa_scan: tanpaScan.c, tanpa_lokasi: tanpaLokasi.c, per_bulan: perBulan.results, per_klasifikasi: perKlas.results, per_sifat: perSifat.results, disposisi_status: disp.results, disposisi_terlambat: terlambat.c };
 }
 function rekapCsv(kind, data, rows) {
   if (kind === "ringkasan") {
@@ -530,9 +531,9 @@ async function cetakAgenda(req, env, user) {
   const { results } = await env.DB.prepare(`SELECT * FROM surat WHERE ${where} ORDER BY tanggal_agenda, id`).bind(...binds).all();
   const periode = bulan ? `Periode ${BULAN_NAMA[parseInt(bulan.slice(5, 7), 10) - 1]} ${bulan.slice(0, 4)}` : tahun ? `Periode Tahun ${tahun}` : "Semua Periode";
   const judul = jenis === "masuk" ? "Buku Agenda Surat Masuk" : jenis === "keluar" ? "Buku Agenda Surat Keluar" : "Buku Agenda Surat";
-  const rows = results.map((r, i) => { const m = maskSurat(user, r); return `<tr><td>${i + 1}</td><td>${esc(tglCtk(r.tanggal_agenda))}</td>${jenis ? "" : `<td>${r.jenis === "masuk" ? "Masuk" : "Keluar"}</td>`}<td>${esc(m.nomor_agenda || "-")}</td><td>${esc(m.nomor_surat)}</td><td>${esc(r.asal || r.tujuan || "-")}</td><td>${esc(m.perihal)}</td></tr>`; }).join("");
+  const rows = results.map((r, i) => { const m = maskSurat(user, r); if (jenis === "masuk") return `<tr><td>${esc(m.nomor_agenda || "-")}</td><td>${esc(tglCtk(r.tanggal_agenda))}</td><td>${esc(tglCtk(r.tanggal_surat))}</td><td>${esc(m.nomor_surat)}</td><td>${esc(r.asal || "-")}</td><td>${esc(m.perihal)}</td><td>${esc(r.klasifikasi || "-")}</td><td>${esc(r.sifat)}</td><td>${esc(r.status_disposisi || "-")}</td></tr>`; if (jenis === "keluar") return `<tr><td>${esc(m.nomor_agenda || "-")}</td><td>${esc(tglCtk(r.tanggal_surat))}</td><td>${esc(tglCtk(r.tanggal_agenda))}</td><td>${esc(m.nomor_surat)}</td><td>${esc(r.tujuan || "-")}</td><td>${esc(m.perihal)}</td><td>${esc(r.klasifikasi || "-")}</td><td>${esc(r.sifat)}</td><td>${esc(r.penandatangan || "-")}</td></tr>`; return `<tr><td>${i + 1}</td><td>${esc(tglCtk(r.tanggal_agenda))}</td><td>${r.jenis === "masuk" ? "Masuk" : "Keluar"}</td><td>${esc(m.nomor_agenda || "-")}</td><td>${esc(m.nomor_surat)}</td><td>${esc(r.asal || r.tujuan || "-")}</td><td>${esc(m.perihal)}</td></tr>`; }).join("");
   const body = `<div class="sub">${esc(judul.toUpperCase())} - ${esc(periode)} - dicetak oleh ${esc(user.nama)} pada ${esc(tglPanjang(stA))}</div>
-  <table><thead><tr><th>No</th><th>Tanggal</th>${jenis ? "" : "<th>Jenis</th>"}<th>Nomor Agenda</th><th>Nomor Surat</th><th>Asal / Tujuan</th><th>Perihal</th></tr></thead><tbody>${rows || `<tr><td colspan="${jenis ? 6 : 7}">Tidak ada data</td></tr>`}</tbody></table>
+  <table><thead><tr>${jenis === "masuk" ? "<th>Nomor Agenda</th><th>Tanggal Diterima</th><th>Tanggal Surat</th><th>Nomor Surat</th><th>Asal Surat</th><th>Perihal</th><th>Klasifikasi</th><th>Sifat</th><th>Status Disposisi</th>" : jenis === "keluar" ? "<th>Nomor Agenda</th><th>Tanggal Surat</th><th>Tanggal Agenda</th><th>Nomor Surat</th><th>Tujuan Surat</th><th>Perihal</th><th>Klasifikasi</th><th>Sifat</th><th>Penandatangan</th>" : "<th>No</th><th>Tanggal</th><th>Jenis</th><th>Nomor Agenda</th><th>Nomor Surat</th><th>Asal / Tujuan</th><th>Perihal</th>"}</tr></thead><tbody>${rows || `<tr><td colspan="${jenis ? 9 : 7}">Tidak ada data</td></tr>`}</tbody></table>
   <div class="ttd"><div>Mengetahui,<br>Kepala Madrasah<div class="nm">${stA.nama_kepala ? esc(stA.nama_kepala) : "( nama pimpinan )"}</div>${stA.nip_kepala ? `<div style="font-size:11px">NIP. ${esc(stA.nip_kepala)}</div>` : ""}</div><div>${barisKotaTgl(stA)}<br>Petugas Tata Usaha<div class="nm">${esc(stA.nama_petugas || user.nama)}</div>${stA.nip_petugas ? `<div>NIP. ${esc(stA.nip_petugas)}</div>` : ""}</div></div>`;
   return new Response(printShell(judul, await kopHtml(env), body, kakiCetak(stA)), { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
@@ -729,7 +730,7 @@ export default {
         let where = "terhapus_pada IS NULL"; const binds = [];
         if (bulan) { where += " AND substr(tanggal_agenda,1,7)=?"; binds.push(bulan); }
         if (jenis) { where += " AND jenis=?"; binds.push(jenis); }
-        const SORT_AG = { tanggal: "tanggal_agenda", nomor: "nomor_agenda", perihal: "perihal", jenis: "jenis" };
+        const SORT_AG = { tanggal: "tanggal_agenda", agenda: "nomor_agenda", nomor: "nomor_surat", perihal: "perihal", jenis: "jenis", klasifikasi: "klasifikasi", sifat: "sifat", status: "status_disposisi" };
         const colAG = SORT_AG[u.searchParams.get("sort")] || "tanggal_agenda";
         const dirAG = u.searchParams.get("dir") === "desc" ? "DESC" : "ASC";
         const { results } = await env.DB.prepare(`SELECT * FROM surat WHERE ${where} ORDER BY ${colAG} ${dirAG}, id ${dirAG} LIMIT 500`).bind(...binds).all();
