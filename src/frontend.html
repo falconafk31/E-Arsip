@@ -37,7 +37,7 @@ th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
     <div class="mn">
       <header class="top" id="topbar"></header>
       <main id="main"></main>
-      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.3.3</span></footer>
+      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.3.4</span></footer>
     </div>
   </div>
 </div>
@@ -578,7 +578,13 @@ async function viewAgenda() {
     + '<select id="agMode" class="flt"><option value="bulan">Per Bulan Ini</option><option value="triwulan">Triwulan Ini</option><option value="tahun">Tahun Ini</option><option value="semua">Semua</option></select></div>'
     + '<div id="agBody"><div class="cb">' + rangka(7) + '</div></div></div>';
   const qs = () => { const q = new URLSearchParams(); if (agState.bulan) q.set("bulan", agState.bulan); if (agState.jenis) q.set("jenis", agState.jenis); return q; };
-  const segar = () => { const q = new URLSearchParams(); if (/^\d{4}$/.test(agState.bulan)) q.set("tahun", agState.bulan); else if (agState.bulan) q.set("bulan", agState.bulan); if (agState.jenis) q.set("jenis", agState.jenis); $("#agPdf").href = "/cetak/agenda?" + q; muatAgenda(); };
+  const segar = () => { const q = new URLSearchParams();
+    if (agState.mode === "triwulan") { const nw = new Date(); const yy = nw.getFullYear(); const aw = Math.floor(nw.getMonth() / 3) * 3 + 1; q.set("dari", yy + "-" + String(aw).padStart(2, "0")); q.set("sampai", yy + "-" + String(aw + 2).padStart(2, "0")); }
+    else if (/^\d{4}$/.test(agState.bulan)) q.set("tahun", agState.bulan);
+    else if (agState.bulan) q.set("bulan", agState.bulan);
+    if (agState.jenis) q.set("jenis", agState.jenis);
+    $("#agPdf").href = "/cetak/agenda?" + q;
+    if (agState.mode === "triwulan") muatAgendaMode("triwulan"); else muatAgenda(); };
   $("#agCsv").onclick = () => toast("CSV tersedia per tahun di menu Rekap Tahunan (ringkasan, masuk, keluar)");
   $("#agBulan").onchange = (e) => { agState.bulan = e.target.value; segar(); };
   $$(".agTab").forEach((b) => { b.classList.toggle("on", b.dataset.tab === agState.jenis); b.onclick = () => { agState.jenis = b.dataset.tab; $$(".agTab").forEach((x) => x.classList.toggle("on", x === b)); segar(); }; });
@@ -590,7 +596,7 @@ async function viewAgenda() {
     else if (e.target.value === "tahun") agState.bulan = String(y);
     else agState.bulan = "";
     $("#agBulan").value = /^\d{4}-\d{2}$/.test(agState.bulan) ? agState.bulan : "";
-    muatAgendaMode(e.target.value); return;
+    segar(); return;
   };
   segar();
 }
