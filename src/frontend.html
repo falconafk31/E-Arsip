@@ -17,6 +17,8 @@ select.flt{width:auto}
 .kop .kt b{font-size:13px}
 .gcari{flex:1;max-width:430px;margin:0 16px}.gcari input{width:100%;height:38px;border-radius:999px;border:1px solid var(--bd);background:var(--bg);padding:0 16px;font-size:13.5px;color:var(--tx)}.gcari input:focus{outline:2px solid var(--ps);border-color:var(--p);background:#fff}
 @media(max-width:720px){.gcari{display:none}}
+.appfoot{display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;padding:16px 24px 22px;color:var(--tf);font-size:12px}
+@media(max-width:720px){.top{height:auto;min-height:56px;padding:8px 12px}.top .acts{flex-wrap:nowrap;min-width:0}.top .crumb{white-space:nowrap;overflow:hidden}.top .cinst,.top .crumb .sep{display:none}.appfoot{padding:14px 16px 18px}}
 .ts button{background:#fff;color:var(--tx);border:0;border-radius:999px;padding:5px 14px;font-weight:700;cursor:pointer;font-size:13px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.chip{display:inline-flex;gap:4px;align-items:center;background:var(--ps);color:var(--p);border-radius:999px;padding:4px 6px 4px 12px;font-size:12.5px;font-weight:600}.chip button{background:none;border:0;color:var(--p);font-weight:800;cursor:pointer;font-size:14px;line-height:1;padding:2px 6px}
 th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
@@ -35,6 +37,7 @@ th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
     <div class="mn">
       <header class="top" id="topbar"></header>
       <main id="main"></main>
+      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.0.0</span></footer>
     </div>
   </div>
 </div>
@@ -75,6 +78,7 @@ function konfirmasi(judul, isi, labelBahaya, cb) {
 function fmtUkuran(b) { if (!b && b !== 0) return "-"; if (b < 1024) return b + " B"; if (b < 1048576) return (b / 1024).toFixed(1) + " KB"; return (b / 1048576).toFixed(2) + " MB"; }
 function todayStr() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function ymStr() { return todayStr().slice(0, 7); }
+function tglPanjangIni() { const d = new Date(); return d.getDate() + " " + BULAN_ID[d.getMonth()] + " " + d.getFullYear(); }
 function fmtTgl(t) { if (!t) return "-"; const p = String(t).slice(0, 10).split("-"); return p.length === 3 ? p[2] + " " + BULAN_ID[parseInt(p[1], 10) - 1].slice(0, 3) + " " + p[0] : t; }
 const ZONA_OFSET = { WIB: 7, WITA: 8, WIT: 9 };
 function zonaAktif() { return ZONA_OFSET[SETTINGS.zona_waktu] !== undefined ? SETTINGS.zona_waktu : "WIB"; }
@@ -144,11 +148,11 @@ function renderShell() {
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => (b.onclick = () => go(b.dataset.go)));
-  $("#btnKeluar").onclick = keluar;
+  $("#btnKeluar").onclick = () => konfirmasi("Keluar dari E-Arsip?", "Sesi Anda akan diakhiri. Anda perlu masuk lagi untuk melanjutkan pekerjaan.", "Keluar", keluar);
   $("#ovl").onclick = () => document.body.classList.remove("nav");
 }
 function renderTop() {
-  $("#topbar").innerHTML = '<div class="acts"><button class="hb" id="hbBtn" aria-label="Buka menu">' + ic("menu") + '</button><span class="crumb">' + esc(namaInstansi()) + '<span class="sep">/</span><b>' + esc(JUDUL[cur.p] || "") + "</b></span></div>"
+  $("#topbar").innerHTML = '<div class="acts"><button class="hb" id="hbBtn" aria-label="Buka menu">' + ic("menu") + '</button><span class="crumb"><span class="cinst">' + esc(namaInstansi()) + '</span><span class="sep">/</span><b>' + esc(JUDUL[cur.p] || "") + "</b></span></div>"
     + '<form class="gcari" id="gCari"><input id="gQ" placeholder="Cari surat masuk atau keluar..." autocomplete="off"></form>'
     + '<div class="av" title="' + esc(me.nama) + '">' + esc(inisial(me.nama)) + "</div>";
   $("#hbBtn").onclick = () => document.body.classList.toggle("nav");
@@ -749,7 +753,7 @@ function setKop() {
     try { const r = await fetch("/api/kop/logo", { method: "POST", body: fd }); const d = await r.json(); if (!r.ok) throw new Error(d.error || "Gagal unggah logo"); SETTINGS.kop_logo_r2_key = d.key; toast("Logo kop terpasang"); viewPengaturan(); }
     catch (er) { toast(er.message, true); }
   };
-  const lh = $("#kLogoHapus"); if (lh) lh.onclick = async () => { try { await api("/api/kop/logo", { method: "DELETE" }); delete SETTINGS.kop_logo_r2_key; toast("Logo kop dihapus"); viewPengaturan(); } catch (e) { toast(e.message, true); } };
+  const lh = $("#kLogoHapus"); if (lh) lh.onclick = () => konfirmasi("Hapus logo kop?", "Logo pada kop surat akan dihapus dari penyimpanan dan tidak tampil lagi di hasil cetak.", "Hapus Logo", async () => { try { await api("/api/kop/logo", { method: "DELETE" }); delete SETTINGS.kop_logo_r2_key; toast("Logo kop dihapus"); viewPengaturan(); } catch (e) { toast(e.message, true); } });
   $("#formKop").onsubmit = async (e) => {
     e.preventDefault(); segar();
     try { await api("/api/settings", { method: "PUT", body: JSON.stringify({ kop_baris1: SETTINGS.kop_baris1, kop_baris2: SETTINGS.kop_baris2, kop_baris3: SETTINGS.kop_baris3, kop_alamat: SETTINGS.kop_alamat, kop_kontak: SETTINGS.kop_kontak, kop_gaya_garis: SETTINGS.kop_gaya_garis, kop_ukuran_logo: SETTINGS.kop_ukuran_logo }) }); toast("Kop surat tersimpan"); renderShell(); }
@@ -766,13 +770,13 @@ function setUmum() {
 }
 function setPejabat() {
   $("#setBody").innerHTML = '<div class="card"><div class="ch"><h2>Pejabat Penanda Tangan</h2></div><div class="cb"><p class="mu" style="margin-bottom:16px">Nama ini tercetak otomatis pada blok tanda tangan Ringkasan PDF dan Buku Agenda, menggantikan garis kosong. Isi sesuai nama resmi kepala sekolah atau pimpinan instansi.</p>'
-    + '<form id="formPejabat"><div class="fl"><label>Nama Pimpinan / Kepala Sekolah <span class="rq">wajib untuk tanda tangan tercetak</span></label><input id="pjNama" value="' + esc(SETTINGS.nama_kepala || "") + '" placeholder="Contoh: Nama lengkap beserta gelar"></div>'
+    + '<form id="formPejabat"><div class="fl"><label>Kota <span class="rq">muncul di atas tanda tangan cetak, diikuti tanggal hari pencetakan</span></label><input id="pjKota" value="' + esc(SETTINGS.kota || "") + '" placeholder="Contoh: Blora"></div><div class="fl"><label>Nama Pimpinan / Kepala Sekolah <span class="rq">wajib untuk tanda tangan tercetak</span></label><input id="pjNama" value="' + esc(SETTINGS.nama_kepala || "") + '" placeholder="Contoh: Nama lengkap beserta gelar"></div>'
     + '<div class="fl"><label>NIP <span class="rq">opsional</span></label><input id="pjNip" value="' + esc(SETTINGS.nip_kepala || "") + '" placeholder="Nomor Induk Pegawai bila ada"></div>'
     + '<button class="btn" type="submit">' + ic("check") + "Simpan Pejabat</button></form>"
-    + '<div class="sheet mt"><div style="text-align:right" class="mu">Contoh blok tanda tangan</div><div class="ttd"><div><div>Kepala Sekolah / Pimpinan</div><div class="sg"></div><div><b><u>' + esc(SETTINGS.nama_kepala || "( nama pimpinan )") + "</u></b>" + (SETTINGS.nip_kepala ? "<br>NIP. " + esc(SETTINGS.nip_kepala) : "") + "</div></div></div></div></div></div>";
+    + '<div class="sheet mt"><div style="text-align:right" class="mu">Contoh blok tanda tangan</div><div class="ttd"><div><div>' + esc((SETTINGS.kota ? SETTINGS.kota + ", " : "") + tglPanjangIni()) + '</div><div>Kepala Sekolah / Pimpinan</div><div class="sg"></div><div><b><u>' + esc(SETTINGS.nama_kepala || "( nama pimpinan )") + "</u></b>" + (SETTINGS.nip_kepala ? "<br>NIP. " + esc(SETTINGS.nip_kepala) : "") + "</div></div></div></div></div></div>";
   $("#formPejabat").onsubmit = async (e) => {
     e.preventDefault();
-    try { await api("/api/settings", { method: "PUT", body: JSON.stringify({ nama_kepala: $("#pjNama").value.trim(), nip_kepala: $("#pjNip").value.trim() }) }); SETTINGS.nama_kepala = $("#pjNama").value.trim(); SETTINGS.nip_kepala = $("#pjNip").value.trim(); toast("Nama pimpinan tersimpan"); setPejabat(); }
+    try { await api("/api/settings", { method: "PUT", body: JSON.stringify({ kota: $("#pjKota").value.trim(), nama_kepala: $("#pjNama").value.trim(), nip_kepala: $("#pjNip").value.trim() }) }); SETTINGS.kota = $("#pjKota").value.trim(); SETTINGS.nama_kepala = $("#pjNama").value.trim(); SETTINGS.nip_kepala = $("#pjNip").value.trim(); toast("Nama pimpinan tersimpan"); setPejabat(); }
     catch (er) { toast(er.message, true); }
   };
 }
@@ -793,7 +797,7 @@ async function setUsers() {
     + (users.length ? users.map((u) => '<div class="acts" style="justify-content:space-between;border-bottom:1px solid var(--bd);padding:8px 0"><span><b>' + esc(u.nama) + '</b> <span class="mu">@' + esc(u.username) + "</span></span>" + '<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="bd ' + (u.role === "admin" ? "pr" : "gr") + '">' + esc(ROLE_LABEL[u.role] || u.role) + '</span><span class="bd ' + (u.aktif ? "ok" : "wn") + '">' + (u.aktif ? "Aktif" : "Nonaktif") + '</span>' + (u.id !== me.id ? '<button class="btn sec sm" data-resetpw="' + u.id + '" data-nama="' + esc(u.nama) + '">Reset Password</button><button class="btn sec sm" data-togaktif="' + u.id + '" data-aktif="' + u.aktif + '">' + (u.aktif ? "Nonaktifkan" : "Aktifkan") + "</button>" : '<span class="bd gr">Akun Anda</span>') + "</span></div>").join("") : '<p class="mu">Belum ada pengguna.</p>')
     + '<form id="formUser" class="mt"><h3>Tambah Pengguna</h3><div class="fg"><div class="fl"><label>Nama Lengkap</label><input id="usNama" required></div><div class="fl"><label>Username</label><input id="usUser" required></div><div class="fl"><label>Password Awal</label><input id="usPass" type="text" required minlength="8"></div><div class="fl"><label>Peran</label><select id="usRole">' + Object.keys(ROLE_LABEL).map((r) => '<option value="' + r + '">' + ROLE_LABEL[r] + "</option>").join("") + '</select></div></div><button class="btn" type="submit">' + ic("plus") + "Tambah Pengguna</button></form></div></div>";
   $("#formUser").onsubmit = async (e) => { e.preventDefault(); try { await api("/api/users", { method: "POST", body: JSON.stringify({ nama: $("#usNama").value.trim(), username: $("#usUser").value.trim(), password: $("#usPass").value, role: $("#usRole").value }) }); toast("Pengguna ditambahkan"); setUsers(); } catch (er) { toast(er.message, true); } };
-  $$("[data-togaktif]").forEach((b) => (b.onclick = async () => { try { await api("/api/users/" + b.dataset.togaktif, { method: "PUT", body: JSON.stringify({ aktif: b.dataset.aktif === "1" ? 0 : 1 }) }); toast(b.dataset.aktif === "1" ? "Pengguna dinonaktifkan" : "Pengguna diaktifkan"); setUsers(); } catch (er) { toast(er.message, true); } }));
+  $$("[data-togaktif]").forEach((b) => (b.onclick = () => { const matikan = b.dataset.aktif === "1"; const jalankan = async () => { try { await api("/api/users/" + b.dataset.togaktif, { method: "PUT", body: JSON.stringify({ aktif: matikan ? 0 : 1 }) }); toast(matikan ? "Pengguna dinonaktifkan" : "Pengguna diaktifkan"); setUsers(); } catch (er) { toast(er.message, true); } }; if (matikan) konfirmasi("Nonaktifkan pengguna ini?", "Pengguna yang dinonaktifkan tidak bisa masuk ke aplikasi sampai diaktifkan kembali.", "Nonaktifkan", jalankan); else jalankan(); }));
   $$("[data-resetpw]").forEach((b) => (b.onclick = () => dialogResetPassword(b.dataset.resetpw, b.dataset.nama)));
 }
 function dialogResetPassword(id, nama) {
