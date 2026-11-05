@@ -37,7 +37,7 @@ th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
     <div class="mn">
       <header class="top" id="topbar"></header>
       <main id="main"></main>
-      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.2.4</span></footer>
+      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.3.0</span></footer>
     </div>
   </div>
 </div>
@@ -212,7 +212,7 @@ async function viewBeranda() {
     + '<div class="card"><div class="ch"><h2>Perlu Perhatian</h2>' + (d.disposisi_terlambat ? '<span class="bd dg">' + d.disposisi_terlambat + " terlambat</span>" : "") + '</div><div>' + peringatan + '</div><div class="cb" style="padding-top:14px"><button class="btn sec sm" id="bSemuaDisp">' + ic("disposition") + "Lihat Semua Disposisi</button></div></div></div>"
     + '<div class="card mt"><div class="ch"><h2>Surat Terbaru</h2><button class="btn sec sm" id="bSemuaSurat">' + ic("inbox") + "Lihat Semua</button></div>"
     + (d.terbaru.length ? '<div class="tw"><table class="a"><thead><tr><th style="width:52px">No</th><th>Jenis</th><th>Nomor / Perihal</th><th>Asal / Tujuan</th><th>Tanggal</th><th>File</th><th>Status</th></tr></thead><tbody>'
-      + d.terbaru.map((r, idx) => '<tr class="rw" data-detail="' + r.id + '" data-jenis="' + r.jenis + '"><td>' + (idx + 1) + "</td><td>" + (r.jenis === "masuk" ? '<span class="bd pr">Masuk</span>' : '<span class="bd in">Keluar</span>') + "</td><td><b>" + esc(ringkas(r.perihal)) + "</b><small>" + esc(r.nomor_agenda || r.nomor_surat) + "</small></td><td>" + esc(ringkas(r.asal || r.tujuan || "-")) + "</td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td>" + (r.file_count || 0) + ' berkas</td><td>' + (r.jenis === "masuk" ? badgeStatus(r.status_disposisi) : '<span class="bd ok">Terkirim</span>') + "</td></tr>").join("")
+      + d.terbaru.map((r, idx) => '<tr class="rw" data-detail="' + r.id + '" data-jenis="' + r.jenis + '"><td>' + (idx + 1) + "</td><td>" + (r.jenis === "masuk" ? '<span class="bd pr">Masuk</span>' : '<span class="bd in">Keluar</span>') + "</td><td><b>" + esc(ringkas(r.perihal)) + "</b><small>" + (r.nomor_agenda ? "Agenda " + (r.jenis === "masuk" ? "Masuk " : "Keluar ") + esc(r.nomor_agenda) : "Belum diagendakan") + "</small></td><td>" + esc(ringkas(r.asal || r.tujuan || "-")) + "</td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td>" + (r.file_count || 0) + ' berkas</td><td>' + (r.jenis === "masuk" ? badgeStatus(r.status_disposisi) : '<span class="bd ok">Terkirim</span>') + "</td></tr>").join("")
       + "</tbody></table></div>" : kosong("Belum ada surat", "Surat yang dicatat akan tampil di sini."))
     + "</div>";
   $("#bTambah").onclick = () => go("form");
@@ -398,7 +398,7 @@ async function viewDisposisi() {
   const bisaUbah = true;
   $("#main").innerHTML = headPage("Disposisi", "Antrian tindak lanjut surat masuk, urut dari yang paling awal dibuat - yang terlambat berlabel merah")
     + '<div class="card">' + (d.items.length ? '<div class="tw"><table class="a"><thead><tr>' + thUrut("No", "dibuat", dispState, ' style="width:52px"') + thUrut("Surat", "perihal", dispState) + thUrut("Kepada", "kepada", dispState) + "<th>Instruksi</th>" + thUrut("Batas Waktu", "batas", dispState) + thUrut("Status", "status", dispState) + "<th>Aksi</th></tr></thead><tbody>" + ""
-      + d.items.map((x, idx) => { const tl = terlambatDisp(x); return '<tr class="rw" data-ke="' + x.surat_id + '"><td>' + (idx + 1) + '</td><td><b>' + esc(x.nomor_surat || x.nomor_agenda || "-") + "</b><small>" + esc(ringkas(x.perihal)) + '</small></td><td>' + esc(ringkas(x.kepada)) + "</td><td>" + esc(ringkas(x.instruksi || "-")) + "</td><td>" + (x.batas_waktu ? '<span class="' + (tl ? "lt" : "") + '">' + (tl ? ic("warning") : "") + fmtTgl(x.batas_waktu) + (tl ? " - TERLAMBAT" : "") + "</span>" : "-") + "</td><td>" + badgeStatus(tl ? "Terlambat" : (x.status === "Baru" ? "Belum" : x.status)) + '</td><td><span class="acts">' + (x.status !== "Selesai" ? '<button class="btn sec sm" data-proses="' + x.id + '">' + ic("clock") + "Proses</button>" : "") + (x.status !== "Selesai" ? '<button class="btn sec sm" data-selesai="' + x.id + '">' + ic("check") + "Selesai</button>" : "") + "</span></td></tr>"; }).join("")
+      + d.items.map((x, idx) => { const tl = terlambatDisp(x); return '<tr class="rw" data-ke="' + x.surat_id + '"><td>' + (idx + 1) + '</td><td><b>' + esc(x.nomor_surat || "-") + "</b><small>" + esc(ringkas(x.perihal)) + '</small><small>Agenda ' + esc(x.nomor_agenda || "-") + "</small></td><td>" + esc(ringkas(x.kepada)) + "</td><td>" + esc(ringkas(x.instruksi || "-")) + "</td><td>" + (x.batas_waktu ? '<span class="' + (tl ? "lt" : "") + '">' + (tl ? ic("warning") : "") + fmtTgl(x.batas_waktu) + (tl ? " - TERLAMBAT" : "") + "</span>" : "-") + "</td><td>" + badgeStatus(tl ? "Terlambat" : (x.status === "Baru" ? "Belum" : x.status)) + '</td><td><span class="acts">' + (x.status !== "Selesai" ? '<button class="btn sec sm" data-proses="' + x.id + '">' + ic("clock") + "Proses</button>" : "") + (x.status !== "Selesai" ? '<button class="btn sec sm" data-selesai="' + x.id + '">' + ic("check") + "Selesai</button>" : "") + "</span></td></tr>"; }).join("")
       + "</tbody></table></div>" : kosong("Tidak ada disposisi aktif", "Semua disposisi sudah selesai atau belum ada surat yang didisposisi.")) + "</div>";
   $$("[data-selesai]").forEach((b) => (b.onclick = async (e) => { e.stopPropagation(); try { await api("/api/disposisi/" + b.dataset.selesai, { method: "PUT", body: JSON.stringify({ status: "Selesai" }) }); toast("Disposisi ditandai selesai"); viewDisposisi(); } catch (e) { toast(e.message, true); } }));
   $$("[data-proses]").forEach((b) => (b.onclick = async (e) => { e.stopPropagation(); try { await api("/api/disposisi/" + b.dataset.proses, { method: "PUT", body: JSON.stringify({ status: "Diproses" }) }); toast("Disposisi ditandai sedang diproses"); viewDisposisi(); } catch (e) { toast(e.message, true); } }));
@@ -563,18 +563,18 @@ async function imporGuru(file) {
 }
 
 /* ---------- buku agenda ---------- */
-const agState = { bulan: (() => { const t = new Date(); return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0"); })(), jenis: "", sort: "tanggal", dir: "asc", mode: "bulan" };
+const agState = { bulan: (() => { const t = new Date(); return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0"); })(), jenis: "masuk", sort: "tanggal", dir: "asc", mode: "bulan" };
 async function viewAgenda() {
   $("#main").innerHTML = headPage("Buku Agenda", "Buku agenda resmi surat masuk dan surat keluar",
     '<button class="btn sec" id="agCsv">' + ic("download") + 'Unduh CSV</button><a class="btn" id="agPdf" target="_blank">' + ic("print") + "Cetak PDF</a>")
-    + '<div class="card"><div class="tb"><input type="month" id="agBulan" style="width:auto" value="' + esc(agState.bulan) + '"><select id="agJenis" class="flt"><option value="">Semua Jenis</option><option value="masuk" ' + (agState.jenis === "masuk" ? "selected" : "") + '>Surat Masuk</option><option value="keluar" ' + (agState.jenis === "keluar" ? "selected" : "") + '>Surat Keluar</option></select>'
+    + '<div class="card"><div class="agTabs"><button type="button" class="agTab" data-tab="masuk">Surat Masuk</button><button type="button" class="agTab" data-tab="keluar">Surat Keluar</button></div><div class="tb"><input type="month" id="agBulan" style="width:auto" value="' + esc(agState.bulan) + '">'
     + '<select id="agMode" class="flt"><option value="bulan">Per Bulan Ini</option><option value="triwulan">Triwulan Ini</option><option value="tahun">Tahun Ini</option><option value="semua">Semua</option></select></div>'
     + '<div id="agBody"><div class="cb mu">Memuat data...</div></div></div>';
   const qs = () => { const q = new URLSearchParams(); if (agState.bulan) q.set("bulan", agState.bulan); if (agState.jenis) q.set("jenis", agState.jenis); return q; };
   const segar = () => { const q = new URLSearchParams(); if (/^\d{4}$/.test(agState.bulan)) q.set("tahun", agState.bulan); else if (agState.bulan) q.set("bulan", agState.bulan); if (agState.jenis) q.set("jenis", agState.jenis); $("#agPdf").href = "/cetak/agenda?" + q; muatAgenda(); };
   $("#agCsv").onclick = () => toast("CSV tersedia per tahun di menu Rekap Tahunan (ringkasan, masuk, keluar)");
   $("#agBulan").onchange = (e) => { agState.bulan = e.target.value; segar(); };
-  $("#agJenis").onchange = (e) => { agState.jenis = e.target.value; segar(); };
+  $$(".agTab").forEach((b) => { b.classList.toggle("on", b.dataset.tab === agState.jenis); b.onclick = () => { agState.jenis = b.dataset.tab; $$(".agTab").forEach((x) => x.classList.toggle("on", x === b)); segar(); }; });
   $("#agMode").onchange = (e) => {
     agState.mode = e.target.value;
     const now = new Date(); const y = now.getFullYear(), m = now.getMonth() + 1;
@@ -609,9 +609,14 @@ async function muatAgendaMode(mode) {
 }
 function renderAgendaRows(d) {
   if (!d.items.length) { $("#agBody").innerHTML = kosong("Tidak ada data agenda", "Tidak ada surat pada pilihan periode dan jenis ini."); return; }
-  $("#agBody").innerHTML = '<div class="tw"><table><thead><tr>' + thUrut("No", "tanggal", agState, ' style="width:52px"') + thUrut("Tanggal", "tanggal", agState) + thUrut("Jenis", "jenis", agState) + thUrut("Nomor Agenda", "agenda", agState) + thUrut("Nomor Surat", "nomor", agState) + "<th>Asal / Tujuan</th>" + thUrut("Perihal", "perihal", agState) + "</tr></thead><tbody>" + ""
-    + d.items.map((r, i) => "<tr><td>" + (i + 1) + "</td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td>" + (r.jenis === "masuk" ? '<span class="bd pr">Masuk</span>' : '<span class="bd in">Keluar</span>') + "</td><td><b>" + esc(r.nomor_agenda || "-") + "</b></td><td>" + esc(r.nomor_surat) + "</td><td>" + esc(ringkas((r.jenis === "masuk" ? r.asal : r.tujuan) || "-")) + "</td><td>" + esc(ringkas(r.perihal)) + "</td></tr>").join("")
-    + "</tbody></table></div>";
+  const masuk = agState.jenis !== "keluar";
+  const head = masuk
+    ? thUrut("Nomor Agenda", "agenda", agState) + thUrut("Tanggal Diterima", "tanggal", agState) + "<th>Tanggal Surat</th>" + thUrut("Nomor Surat", "nomor", agState) + "<th>Asal Surat</th>" + thUrut("Perihal", "perihal", agState) + thUrut("Klasifikasi", "klasifikasi", agState) + thUrut("Sifat", "sifat", agState) + thUrut("Status Disposisi", "status", agState)
+    : thUrut("Nomor Agenda", "agenda", agState) + "<th>Tanggal Surat</th>" + thUrut("Tanggal Agenda", "tanggal", agState) + thUrut("Nomor Surat", "nomor", agState) + "<th>Tujuan Surat</th>" + thUrut("Perihal", "perihal", agState) + thUrut("Klasifikasi", "klasifikasi", agState) + thUrut("Sifat", "sifat", agState) + "<th>Penandatangan</th>";
+  const baris = (r) => masuk
+    ? "<tr><td><b>" + esc(r.nomor_agenda || "-") + "</b></td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td>" + fmtTgl(r.tanggal_surat) + "</td><td>" + esc(r.nomor_surat) + "</td><td>" + esc(ringkas(r.asal || "-")) + "</td><td>" + esc(ringkas(r.perihal)) + "</td><td>" + esc(r.klasifikasi || "-") + "</td><td>" + badgeSifat(r.sifat) + "</td><td>" + badgeStatus(r.status_disposisi) + "</td></tr>"
+    : "<tr><td><b>" + esc(r.nomor_agenda || "-") + "</b></td><td>" + fmtTgl(r.tanggal_surat) + "</td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td>" + esc(r.nomor_surat) + "</td><td>" + esc(ringkas(r.tujuan || "-")) + "</td><td>" + esc(ringkas(r.perihal)) + "</td><td>" + esc(r.klasifikasi || "-") + "</td><td>" + badgeSifat(r.sifat) + "</td><td>" + esc(r.penandatangan || "-") + "</td></tr>";
+  $("#agBody").innerHTML = '<div class="tw"><table><thead><tr>' + head + "</tr></thead><tbody>" + d.items.map(baris).join("") + "</tbody></table></div>";
   ikatUrut(agState, () => { if (agState.mode === "triwulan") muatAgendaMode("triwulan"); else muatAgenda(); });
 }
 
@@ -643,7 +648,7 @@ async function viewRekap() {
     + '<div id="rkTab-klas" hidden><div class="tw"><table><thead><tr><th style="width:52px">No</th><th>Klasifikasi</th><th>Masuk</th><th>Keluar</th><th>Total</th></tr></thead><tbody>' + barisKlas + "</tbody></table></div></div>"
     + '<div id="rkTab-sifat" hidden><div class="tw"><table><thead><tr><th style="width:52px">No</th><th>Sifat Surat</th><th>Masuk</th><th>Keluar</th><th>Total</th></tr></thead><tbody>' + barisSifat + "</tbody></table></div></div>"
     + '<div id="rkTab-disp" hidden><div class="tw"><table><thead><tr><th style="width:52px">No</th><th>Status</th><th>Jumlah</th></tr></thead><tbody>' + barisDisp + "</tbody></table></div></div>"
-    + '<p class="mu" style="margin-top:14px">Disposisi belum selesai: <b>' + (d.totals.disposisi_belum || 0) + "</b> - Terlambat: <b>" + d.disposisi_terlambat + "</b> - Berkas belum diunggah: <b>" + d.tanpa_scan + "</b> - Lokasi fisik belum diisi: <b>" + d.tanpa_lokasi + "</b></p>";
+    + '<p class="mu" style="margin-top:14px">Disposisi belum selesai: <b>' + (d.totals.disposisi_belum || 0) + "</b> - Terlambat: <b>" + d.disposisi_terlambat + "</b> - Berkas belum diunggah: <b>" + d.tanpa_scan + "</b> - Lokasi fisik belum diisi: <b>" + d.tanpa_lokasi + '</b> - Nomor Agenda terakhir: Masuk <b>' + String((d.agenda_terakhir || {}).masuk || 0).padStart(3, "0") + '</b> - Keluar <b>' + String((d.agenda_terakhir || {}).keluar || 0).padStart(3, "0") + "</b></p>";
   $("#rkTahun").onchange = (e) => { rekapTahun = e.target.value; viewRekap(); };
   $$("#rkTabs button").forEach((b) => (b.onclick = () => { $$("#rkTabs button").forEach((x) => x.classList.toggle("on", x === b)); ["bulan", "klas", "sifat", "disp"].forEach((t) => ($("#rkTab-" + t).hidden = t !== b.dataset.tab)); }));
 }
