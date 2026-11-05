@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.2.3] - 2026-11-05
+
+### Diperbaiki
+
+- Garis bawah pada blok tanda tangan cetakan kini hanya pada nama penanda tangan; baris NIP di bawahnya tidak lagi ikut tergaris, meniru format dokumen resmi.
+
 ## [1.2.2] - 2026-11-05
 
 ### Ditambahkan
