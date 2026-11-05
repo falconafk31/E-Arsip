@@ -124,6 +124,8 @@ table.a th:last-child,table.a td:last-child{text-align:right;width:130px}
 .fi2 li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd)}
 .fi2 li>div{flex:1;min-width:0}.fi2 small{display:block;color:var(--tm);font-size:12px}
 .fi2 .fic{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;background:var(--bg);color:var(--fg)}
+/* Daftar berkas di HP: nama berkas sebaris penuh, tombol menumpuk di bawahnya */
+@media(max-width:720px){.fi2 li{flex-wrap:wrap;row-gap:6px}.fi2 li>div{flex:1 1 calc(100% - 48px)}.fi2 li>div b{overflow-wrap:anywhere}.fi2 .acts{flex:1 1 100%;justify-content:flex-start}}
 .dz{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed var(--bd2);border-radius:10px;padding:18px;text-align:center;color:var(--tm);background:var(--sf2);cursor:pointer;width:100%;margin-top:14px}
 .dz:hover{border-color:var(--p);background:var(--ps)}.dz .ic{width:26px;height:26px;color:var(--ph)}
 .pgr{display:block;height:6px;border-radius:3px;background:var(--bd);margin-top:6px;overflow:hidden}.pgr i{display:block;height:100%;background:var(--p);width:0;animation:fl 1.2s forwards}

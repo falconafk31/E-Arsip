@@ -39,6 +39,7 @@ Rilis publik pertama.
 - Pagination halaman Audit.
 - Tombol menu pada tampilan mobile agar selalu terlihat dan mudah ditekan.
 - Header pada tampilan mobile: nama instansi tidak lagi membuat breadcrumb turun dua baris; header menjadi satu baris berisi tombol menu, judul halaman, dan avatar.
+- Daftar berkas pada halaman detail surat di layar HP: nama berkas tampil penuh selebar baris dan tombol aksi menumpuk rapi di bawahnya; sebelumnya nama berkas terjepit sempit dan tombol menimpa teks.
 
 ## [0.1.0] - 2026-11-05
 
