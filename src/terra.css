@@ -206,3 +206,6 @@ input[type=range]{accent-color:var(--p)}
 @media(max-width:720px){.top .hb{display:flex}}
 /* Ikon sortir di header tabel */
 .sic{display:inline-flex;vertical-align:-2px;margin-left:5px}.sic svg{width:12px;height:12px}.sic.dim{opacity:.35}.sic.on{color:var(--p)}
+
+/* HP: sel tabel satu baris; teks panjang dipotong 4 kata oleh ringkas() di sisi JS */
+@media(max-width:720px){.tw td{white-space:nowrap}}

@@ -16,6 +16,7 @@ Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a C
 - Header pada tampilan mobile: nama instansi tidak lagi membuat breadcrumb turun dua baris; header menjadi satu baris berisi tombol menu, judul halaman, dan avatar.
 - Daftar berkas pada halaman detail surat di layar HP: nama berkas tampil penuh selebar baris dan tombol aksi menumpuk rapi di bawahnya; sebelumnya nama berkas terjepit sempit dan tombol menimpa teks.
 - Tabel Disposisi pada layar HP berupa tabel yang dapat digeser ke samping seperti daftar surat, sesuai keputusan pengguna bahwa kartu bertumpuk terlalu besar.
+- Teks panjang pada tabel dan daftar (perihal, instruksi, kepada, asal/tujuan surat, rincian audit) dipotong menjadi 4 kata diikuti "..." khusus pada layar HP, dan sel tabel tampil satu baris; nomor surat dan nomor agenda tidak pernah dipotong. Teks lengkap tetap tampil di halaman detail dan di layar desktop.
 
 ## [1.0.0] - 2026-11-05
 
