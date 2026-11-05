@@ -103,6 +103,16 @@ Prasyarat: akun Cloudflare, Python 3, dan API token Cloudflare dengan izin Worke
 
 Alternatif deploy memakai Wrangler: salin `wrangler.toml.example` menjadi `wrangler.toml`, isi UUID database, jalankan `python3 build.py` lalu `npx wrangler deploy`.
 
+### Deploy otomatis dari GitHub (Cloudflare Workers Builds)
+
+Instance yang berjalan dari repo ini terhubung ke Cloudflare Workers Builds: setiap push ke branch `main` otomatis membangun dan men-deploy Worker `arsip-surat`. Pengaturan build di dashboard Cloudflare (Workers & Pages, Worker arsip-surat, Settings, Builds):
+
+- Build command: `node build.mjs` (merakit `worker.js` dari `src/`, setara `build.py`)
+- Deploy command: `npx wrangler deploy`
+- Konfigurasi binding ada di `wrangler.toml` (D1 `DB`, R2 `FILES`, compatibility_date 2024-11-01)
+
+Artinya perubahan cukup di-push ke repo ini; tidak perlu deploy manual dari mesin tertentu. Migrasi database TIDAK ikut otomatis - jalankan berkas di `database/migrations/` secara manual bila ada migrasi baru.
+
 ## Memperbarui instalasi yang sudah berjalan
 
 Skema versi terbaru juga tersedia sebagai migrasi berurutan di `database/migrations/`:

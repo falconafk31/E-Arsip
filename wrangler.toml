@@ -1,0 +1,15 @@
+# Konfigurasi deploy Cloudflare Workers untuk E-Arsip (instance Refleksi Ruang / MIN Blora).
+# Dipakai oleh Cloudflare Workers Builds (integrasi GitHub) dan oleh wrangler manual.
+# Penjelasan umum ada di wrangler.toml.example; berkas ini berisi nilai instance yang berjalan.
+name = "arsip-surat"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "arsip-surat-db"
+database_id = "e3b6e102-ee29-4e39-b285-40f8bdbd1dd4"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "arsip-surat-files"
