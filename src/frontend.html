@@ -37,7 +37,7 @@ th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
     <div class="mn">
       <header class="top" id="topbar"></header>
       <main id="main"></main>
-      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.3.2</span></footer>
+      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.3.3</span></footer>
     </div>
   </div>
 </div>
@@ -57,12 +57,17 @@ let me = null, r2Aktif = false, klasList = [], SETTINGS = {};
 let cur = { p: "beranda" };
 const ROLE_LABEL = { admin: "Administrator", petugas: "Petugas TU", pimpinan: "Pimpinan", viewer: "Pengamat" };
 
+const cacheGET = new Map();
 async function api(path, opt) {
+  const metode = (opt && opt.method) || "GET";
+  if (metode === "GET" && cacheGET.has(path)) return JSON.parse(cacheGET.get(path));
   const r = await fetch(path, Object.assign({ headers: { "Content-Type": "application/json" } }, opt || {}));
   let d = {}; try { d = await r.json(); } catch (e) {}
   if (!r.ok) throw new Error(d.error || ("HTTP " + r.status));
+  if (metode === "GET") cacheGET.set(path, JSON.stringify(d)); else cacheGET.clear();
   return d;
 }
+function rangka(n) { const w = [92, 76, 88, 64, 84, 70, 90, 68]; let h = '<div class="rkg" aria-hidden="true">'; for (let i = 0; i < (n || 5); i++) h += '<i style="width:' + w[i % w.length] + '%"></i>'; return h + "</div>"; }
 function toast(msg, isErr) {
   const t = $("#toast");
   t.innerHTML = ic(isErr ? "warning" : "check") + "<span>" + esc(msg) + "</span>";
@@ -129,9 +134,10 @@ function parseRute() {
   return null;
 }
 async function masukAplikasi() {
-  try { const m = await api("/api/me"); me = m.user; r2Aktif = !!m.r2_aktif; } catch (e) {}
-  try { const k = await api("/api/klasifikasi"); klasList = k.items || []; } catch (e) {}
-  try { const sd = await api("/api/settings"); SETTINGS = sd.settings || sd || {}; } catch (e) { SETTINGS = {}; }
+  const [rm, rk, rs] = await Promise.all([api("/api/me").catch(() => null), api("/api/klasifikasi").catch(() => null), api("/api/settings").catch(() => null)]);
+  if (rm) { me = rm.user; r2Aktif = !!rm.r2_aktif; }
+  if (rk) klasList = rk.items || [];
+  SETTINGS = rs ? (rs.settings || rs || {}) : {};
   $("#loginView").hidden = true; $("#appView").hidden = false;
   renderShell(); const pr = parseRute(); if (pr) go(pr.p, pr.arg); else go("beranda");
 }
@@ -178,6 +184,7 @@ function go(p, arg) {
   $$("#sb .nv[data-k]").forEach((n) => n.classList.toggle("on", n.dataset.k === nk || (p === "form" && false)));
   const fn = { beranda: viewBeranda, masuk: () => viewList("masuk"), keluar: () => viewList("keluar"), detail: viewDetail, disposisi: viewDisposisi, form: viewForm, agenda: viewAgenda, rekap: viewRekap, sampah: viewSampah, pengaturan: viewPengaturan, audit: viewAudit, cari: viewCari, guru: viewGuru }[p];
   if (fn) fn(arg);
+  const mn = $("#main"); if (mn) { mn.classList.remove("vin"); void mn.offsetWidth; mn.classList.add("vin"); }
   window.scrollTo(0, 0);
 }
 function headPage(judul, sub, aksiHtml) {
@@ -187,7 +194,7 @@ function kosong(teks, sub) { return '<div class="em">' + ic("inbox") + "<b>" + e
 
 /* ---------- beranda ---------- */
 async function viewBeranda() {
-  $("#main").innerHTML = headPage("Beranda", "Memuat ringkasan...") + '<div class="card cb">Memuat data...</div>';
+  $("#main").innerHTML = headPage("Beranda", "Memuat ringkasan...") + '<div class="card cb">' + rangka(5) + "</div>";
   let d; try { d = await api("/api/dashboard"); } catch (e) { $("#main").innerHTML = headPage("Beranda", "") + '<div class="card cb er">' + esc(e.message) + "</div>"; return; }
   const max = Math.max(1, ...d.per_bulan.map((b) => b.total || 0));
   let chart = '<div class="chart">';
@@ -238,7 +245,7 @@ async function viewList(jenis) {
     + (jenis === "masuk" ? '<select id="fStatus" class="flt"><option value="">Semua Status</option>' + ["Belum", "Diproses", "Selesai"].map((s) => '<option ' + (st.status === s ? "selected" : "") + ">" + s + "</option>").join("") + "</select>" : "")
     + '<label class="acts" style="gap:6px;font-weight:500"><input type="checkbox" id="fScan" style="width:auto;height:auto" ' + (st.tanpa_scan ? "checked" : "") + "> Berkas belum diunggah</label>"
     + '<button class="btn sec sm" id="fReset">Atur Ulang</button></div>'
-    + '<div id="listBody"><div class="cb mu">Memuat data...</div></div></div><input type="file" id="quickFile" hidden multiple accept=".pdf,.jpg,.jpeg,.png,.webp">';
+    + '<div id="listBody"><div class="cb">' + rangka(6) + '</div></div></div><input type="file" id="quickFile" hidden multiple accept=".pdf,.jpg,.jpeg,.png,.webp">';
   $("#bTambah").onclick = () => go("form", { jenis });
   const reload = () => { st.page = 1; muatList(jenis); };
   let tQ; $("#fQ").oninput = (e) => { clearTimeout(tQ); tQ = setTimeout(() => { st.q = e.target.value; reload(); }, 300); };
@@ -293,7 +300,7 @@ async function muatList(jenis) {
 
 /* ---------- detail surat ---------- */
 async function viewDetail(id) {
-  $("#main").innerHTML = headPage("Detail Surat", "Memuat...") + '<div class="card cb">Memuat data...</div>';
+  $("#main").innerHTML = headPage("Detail Surat", "Memuat...") + '<div class="card cb">' + rangka(6) + "</div>";
   let d; try { d = await api("/api/surat/" + id); } catch (e) { $("#main").innerHTML = headPage("Detail Surat", "") + '<div class="card cb er">' + esc(e.message) + "</div>"; return; }
   const s = d.surat, bisaUbah = me.role === "admin" || me.role === "petugas";
   window._detailJenis = s.jenis;
@@ -393,7 +400,7 @@ async function viewDetail(id) {
 /* ---------- halaman disposisi ---------- */
 const dispState = { sort: "dibuat", dir: "asc" };
 async function viewDisposisi() {
-  $("#main").innerHTML = headPage("Disposisi", "Memuat antrian...") + '<div class="card cb">Memuat data...</div>';
+  $("#main").innerHTML = headPage("Disposisi", "Memuat antrian...") + '<div class="card cb">' + rangka(5) + "</div>";
   let d; try { d = await api("/api/disposisi?sort=" + dispState.sort + "&dir=" + dispState.dir); } catch (e) { $("#main").innerHTML = headPage("Disposisi", "") + '<div class="card cb er">' + esc(e.message) + "</div>"; return; }
   const bisaUbah = true;
   $("#main").innerHTML = headPage("Disposisi", "Antrian tindak lanjut surat masuk, urut dari yang paling awal dibuat - yang terlambat berlabel merah")
@@ -500,7 +507,7 @@ async function viewGuru() {
     + '<div class="card"><div class="tb"><div class="sr">' + ic("search") + '<input id="gQ" placeholder="Cari nama, NIP, atau jabatan..." value="' + esc(guruState.q) + '"></div>'
     + '<select id="gKat" class="flt"><option value="">Semua Kategori</option>' + ["Guru", "Staff"].map((k) => '<option ' + (guruState.kategori === k ? "selected" : "") + ">" + k + "</option>").join("") + "</select>"
     + '<label class="acts" style="gap:6px;font-weight:500"><input type="checkbox" id="gNonaktif" style="width:auto;height:auto"> Tampilkan nonaktif</label></div>'
-    + '<div id="guruBody"><div class="cb mu">Memuat data...</div></div></div><input type="file" id="guruFile" hidden accept=".xlsx,.csv">';
+    + '<div id="guruBody"><div class="cb">' + rangka(5) + '</div></div></div><input type="file" id="guruFile" hidden accept=".xlsx,.csv">';
   const gt = $("#gTemplate"); if (gt) gt.onclick = () => { window.location.href = "/api/guru/template"; };
   const gb = $("#gTambah"); if (gb) gb.onclick = () => dialogGuru(null);
   const gi = $("#gImporBtn"); if (gi) gi.onclick = () => $("#guruFile").click();
@@ -569,7 +576,7 @@ async function viewAgenda() {
     '<button class="btn sec" id="agCsv">' + ic("download") + 'Unduh CSV</button><a class="btn" id="agPdf" target="_blank">' + ic("print") + "Cetak PDF</a>")
     + '<div class="card"><div class="agTabs"><button type="button" class="agTab" data-tab="masuk">Surat Masuk</button><button type="button" class="agTab" data-tab="keluar">Surat Keluar</button></div><div class="tb"><input type="month" id="agBulan" style="width:auto" value="' + esc(agState.bulan) + '">'
     + '<select id="agMode" class="flt"><option value="bulan">Per Bulan Ini</option><option value="triwulan">Triwulan Ini</option><option value="tahun">Tahun Ini</option><option value="semua">Semua</option></select></div>'
-    + '<div id="agBody"><div class="cb mu">Memuat data...</div></div></div>';
+    + '<div id="agBody"><div class="cb">' + rangka(7) + '</div></div></div>';
   const qs = () => { const q = new URLSearchParams(); if (agState.bulan) q.set("bulan", agState.bulan); if (agState.jenis) q.set("jenis", agState.jenis); return q; };
   const segar = () => { const q = new URLSearchParams(); if (/^\d{4}$/.test(agState.bulan)) q.set("tahun", agState.bulan); else if (agState.bulan) q.set("bulan", agState.bulan); if (agState.jenis) q.set("jenis", agState.jenis); $("#agPdf").href = "/cetak/agenda?" + q; muatAgenda(); };
   $("#agCsv").onclick = () => toast("CSV tersedia per tahun di menu Rekap Tahunan (ringkasan, masuk, keluar)");
@@ -602,9 +609,8 @@ async function muatAgendaMode(mode) {
   if (mode === "triwulan") { const start = Math.floor((m - 1) / 3) * 3 + 1; bulanList = [0, 1, 2].map((i) => y + "-" + String(start + i).padStart(2, "0")); }
   else if (mode === "tahun") { const q = new URLSearchParams({ tahun: y }); if (agState.jenis) q.set("jenis", agState.jenis); try { renderAgendaRows(await api("/api/agenda?" + q)); } catch (e) { $("#agBody").innerHTML = '<div class="cb er">' + esc(e.message) + "</div>"; } return; }
   try {
-    let gabung = [];
-    for (const b of bulanList) { const q = new URLSearchParams({ bulan: b }); if (agState.jenis) q.set("jenis", agState.jenis); q.set("sort", agState.sort); q.set("dir", agState.dir); const d = await api("/api/agenda?" + q); gabung = gabung.concat(d.items); }
-    renderAgendaRows({ items: gabung });
+    const hasil = await Promise.all(bulanList.map(async (b) => { const q = new URLSearchParams({ bulan: b }); if (agState.jenis) q.set("jenis", agState.jenis); q.set("sort", agState.sort); q.set("dir", agState.dir); return api("/api/agenda?" + q); }));
+    renderAgendaRows({ items: hasil.flatMap((d) => d.items) });
   } catch (e) { $("#agBody").innerHTML = '<div class="cb er">' + esc(e.message) + "</div>"; }
 }
 function renderAgendaRows(d) {
@@ -624,7 +630,7 @@ function renderAgendaRows(d) {
 let rekapTahun = String(new Date().getFullYear());
 async function viewRekap() {
   $("#main").innerHTML = headPage("Rekap Tahunan", "Ringkasan arsip satu tahun untuk laporan dan tanda tangan pimpinan")
-    + '<div class="card cb" id="rkBody">Memuat data...</div>';
+    + '<div class="card cb" id="rkBody">' + rangka(5) + "</div>";
   let d; try { d = await api("/api/rekap?tahun=" + rekapTahun); } catch (e) { $("#rkBody").innerHTML = '<span class="er">' + esc(e.message) + "</span>"; return; }
   const thnIni = new Date().getFullYear();
   const opsiTahun = []; for (let y = thnIni + 1; y >= thnIni - 4; y--) opsiTahun.push('<option ' + (String(y) === rekapTahun ? "selected" : "") + ">" + y + "</option>");
@@ -657,7 +663,7 @@ async function viewRekap() {
 const sampahState = { page: 1, sort: "tanggal", dir: "asc" };
 let sampahPage = 1;
 async function viewSampah() {
-  $("#main").innerHTML = headPage("Tempat Sampah", "Memuat...") + '<div class="card cb">Memuat data...</div>';
+  $("#main").innerHTML = headPage("Tempat Sampah", "Memuat...") + '<div class="card cb">' + rangka(4) + "</div>";
   sampahPage = sampahState.page;
   let d; try { d = await api("/api/surat?sampah=1&page=" + sampahState.page + "&sort=" + sampahState.sort + "&dir=" + sampahState.dir); } catch (e) { $("#main").innerHTML = headPage("Tempat Sampah", "") + '<div class="card cb er">' + esc(e.message) + "</div>"; return; }
   const pages = Math.max(1, Math.ceil(d.total / 25));
@@ -683,7 +689,7 @@ async function viewAudit() {
     + '<div class="card"><div class="tb"><div class="sr">' + ic("search") + '<input id="auQ" placeholder="Cari aksi, pengguna, atau rincian..." value="' + esc(auditState.q) + '"></div>'
     + '<select id="auAksi" class="flt"><option value="">Semua Aksi</option></select>'
     + '<button class="btn sec sm" id="auReset">Atur Ulang</button></div>'
-    + '<div id="auditBody"><div class="cb mu">Memuat data...</div></div></div>';
+    + '<div id="auditBody"><div class="cb">' + rangka(5) + '</div></div></div>';
   let tQ; $("#auQ").oninput = (e) => { clearTimeout(tQ); tQ = setTimeout(() => { auditState.q = e.target.value; auditState.page = 1; muatAudit(); }, 300); };
   $("#auAksi").onchange = (e) => { auditState.aksi = e.target.value; auditState.page = 1; muatAudit(); };
   $("#auReset").onclick = () => { auditState.q = ""; auditState.aksi = ""; auditState.page = 1; auditState.sort = "id"; auditState.dir = "asc"; viewAudit(); };
@@ -712,7 +718,7 @@ async function muatAudit(isiAksi) {
 async function viewCari(arg) {
   const q = (arg && arg.q) || "";
   $("#main").innerHTML = headPage("Pencarian", "Mencari di surat masuk dan surat keluar sekaligus")
-    + '<div class="card"><div class="tb"><form class="sr" id="cariForm" style="flex:1">' + ic("search") + '<input id="cariQ" placeholder="Cari nomor surat, nomor agenda, perihal, asal, atau tujuan..." value="' + esc(q) + '"></form></div><div id="cariBody"><div class="cb mu">Memuat hasil...</div></div></div>';
+    + '<div class="card"><div class="tb"><form class="sr" id="cariForm" style="flex:1">' + ic("search") + '<input id="cariQ" placeholder="Cari nomor surat, nomor agenda, perihal, asal, atau tujuan..." value="' + esc(q) + '"></form></div><div id="cariBody"><div class="cb">' + rangka(4) + '</div></div></div>';
   $("#cariForm").onsubmit = (e) => { e.preventDefault(); go("cari", { q: $("#cariQ").value.trim() }); };
   if (!q) { $("#cariBody").innerHTML = kosong("Ketik kata kunci dulu", "Pencarian mencakup nomor surat, nomor agenda, perihal, ringkasan, asal, dan tujuan."); return; }
   let dm, dk;
