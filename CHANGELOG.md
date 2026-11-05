@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.3.2] - 2026-11-05
+
+### Diubah
+
+- Seluruh teks cetakan PDF (Buku Agenda, Rekap Tahunan, dan Lembar Disposisi) kini memakai huruf Arial, termasuk judul dan baris keterangan periode yang sebelumnya masih memakai Georgia bawaan badan halaman cetak.
+
 ## [1.3.1] - 2026-11-05
 
 ### Diubah
