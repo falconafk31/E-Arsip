@@ -17,6 +17,8 @@ function nowZona(st) { const z = (st && st.zona_waktu) || "WIB"; return { d: new
 function tglPanjang(st) { const o = nowZona(st); return o.d.getUTCDate() + " " + BULAN_NAMA[o.d.getUTCMonth()] + " " + o.d.getUTCFullYear(); }
 function jamZona(st) { const o = nowZona(st); const p = (n) => String(n).padStart(2, "0"); return p(o.d.getUTCHours()) + "." + p(o.d.getUTCMinutes()) + " " + o.z; }
 function barisKotaTgl(st) { const t = tglPanjang(st); return st && st.kota ? esc(st.kota) + ", " + t : t; }
+const BLN_PDK = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+function tglCtk(iso) { if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(String(iso))) return iso || "-"; const p = String(iso).slice(0, 10).split("-"); return parseInt(p[2], 10) + " " + BLN_PDK[parseInt(p[1], 10) - 1] + " " + p[0]; }
 function kakiCetak(st) { return `<div class="cetak-info">Dicetak pada ${esc(tglPanjang(st))} pukul ${esc(jamZona(st))}</div>`; }
 function isRahasia(s) { return String(s?.sifat || "").toLowerCase() === "rahasia"; }
 function canSeeRahasia(u) { return u && ["admin", "petugas", "pimpinan"].includes(u.role); }
@@ -526,11 +528,11 @@ async function cetakAgenda(req, env, user) {
   if (jenis) { where += " AND jenis=?"; binds.push(jenis); }
   const stA = await getSettings(env);
   const { results } = await env.DB.prepare(`SELECT * FROM surat WHERE ${where} ORDER BY tanggal_agenda, id`).bind(...binds).all();
-  const periode = bulan ? `Periode ${bulan}` : tahun ? `Periode Tahun ${tahun}` : "Semua Periode";
-  const rows = results.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.tanggal_agenda)}</td><td>${r.jenis === "masuk" ? "Masuk" : "Keluar"}</td><td>${esc(maskSurat(user, r).nomor_agenda || maskSurat(user, r).nomor_surat)}</td><td>${esc(r.asal || r.tujuan || "-")}</td><td>${esc(maskSurat(user, r).perihal)}</td></tr>`).join("");
+  const periode = bulan ? `Periode ${BULAN_NAMA[parseInt(bulan.slice(5, 7), 10) - 1]} ${bulan.slice(0, 4)}` : tahun ? `Periode Tahun ${tahun}` : "Semua Periode";
+  const rows = results.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(tglCtk(r.tanggal_agenda))}</td><td>${r.jenis === "masuk" ? "Masuk" : "Keluar"}</td><td>${esc(maskSurat(user, r).nomor_agenda || maskSurat(user, r).nomor_surat)}</td><td>${esc(r.asal || r.tujuan || "-")}</td><td>${esc(maskSurat(user, r).perihal)}</td></tr>`).join("");
   const body = `<div class="sub">BUKU AGENDA SURAT - ${esc(periode)} - dicetak oleh ${esc(user.nama)} pada ${esc(tglPanjang(stA))}</div>
   <table><thead><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Nomor</th><th>Asal / Tujuan</th><th>Perihal</th></tr></thead><tbody>${rows || '<tr><td colspan="6">Tidak ada data</td></tr>'}</tbody></table>
-  <div class="ttd"><div>Petugas Tata Usaha<div class="nm">${esc(user.nama)}</div></div><div>${barisKotaTgl(stA)}<br>Kepala Sekolah / Pimpinan<div class="nm">${stA.nama_kepala ? esc(stA.nama_kepala) : "( nama pimpinan )"}${stA.nip_kepala ? `<br><span style="font-weight:400;font-size:11px">NIP. ${esc(stA.nip_kepala)}</span>` : ""}</div></div></div>`;
+  <div class="ttd"><div>${barisKotaTgl(stA)}<br>Petugas Tata Usaha<div class="nm">${esc(user.nama)}</div></div><div>${barisKotaTgl(stA)}<br>Kepala Sekolah / Pimpinan<div class="nm">${stA.nama_kepala ? esc(stA.nama_kepala) : "( nama pimpinan )"}${stA.nip_kepala ? `<br><span style="font-weight:400;font-size:11px">NIP. ${esc(stA.nip_kepala)}</span>` : ""}</div></div></div>`;
   return new Response(printShell("Buku Agenda Surat", await kopHtml(env), body, kakiCetak(stA)), { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 async function cetakRekap(req, env, user) {
@@ -556,7 +558,7 @@ async function cetakRekap(req, env, user) {
   <h1 style="text-align:left;font-size:14px">Rekap Per Klasifikasi</h1><table><thead><tr><th>Klasifikasi</th><th>Masuk</th><th>Keluar</th><th>Total</th></tr></thead><tbody>${klasRows}</tbody></table>
   <h1 style="text-align:left;font-size:14px">Rekap Per Sifat Surat</h1><table><thead><tr><th>Sifat</th><th>Masuk</th><th>Keluar</th><th>Total</th></tr></thead><tbody>${sifatRows}</tbody></table>
   <h1 style="text-align:left;font-size:14px">Ringkasan Disposisi</h1><table><thead><tr><th>Status</th><th>Jumlah</th></tr></thead><tbody>${dispRows || '<tr><td colspan="2">Tidak ada disposisi</td></tr>'}</tbody></table>
-  <div class="ttd"><div>Petugas Tata Usaha<div class="nm">${esc(user.nama)}</div></div><div>${barisKotaTgl(stK)}<br>Kepala Sekolah / Pimpinan<div class="nm">${d.kepala.nama ? esc(d.kepala.nama) : "( nama pimpinan )"}${d.kepala.nip ? `<br><span style="font-weight:400;font-size:11px">NIP. ${esc(d.kepala.nip)}</span>` : ""}</div></div></div>`;
+  <div class="ttd"><div>${barisKotaTgl(stK)}<br>Petugas Tata Usaha<div class="nm">${esc(user.nama)}</div></div><div>${barisKotaTgl(stK)}<br>Kepala Sekolah / Pimpinan<div class="nm">${d.kepala.nama ? esc(d.kepala.nama) : "( nama pimpinan )"}${d.kepala.nip ? `<br><span style="font-weight:400;font-size:11px">NIP. ${esc(d.kepala.nip)}</span>` : ""}</div></div></div>`;
   return new Response(printShell(`Rekap Arsip Surat Tahun ${tahun}`, await kopHtml(env), body, kakiCetak(stK)), { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 const BULAN_NAMA = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
@@ -565,13 +567,13 @@ async function cetakDisposisi(env, user, id) {
   if (!s) return err("Surat tidak ditemukan", 404);
   const { results: disp } = await env.DB.prepare("SELECT * FROM disposisi WHERE surat_id=? ORDER BY id").bind(id).all();
   const stD = await getSettings(env);
-  const rows = disp.map(d => `<tr><td>${esc(d.kepada)}</td><td>${esc(d.instruksi)}</td><td>${esc(d.batas_waktu || "-")}</td><td>${esc(d.status)}</td></tr>`).join("");
+  const rows = disp.map(d => `<tr><td>${esc(d.kepada)}</td><td>${esc(d.instruksi)}</td><td>${esc(tglCtk(d.batas_waktu))}</td><td>${esc(d.status)}</td></tr>`).join("");
   const m = maskSurat(user, s);
   const body = `<div class="sub">LEMBAR DISPOSISI - dicetak oleh ${esc(user.nama)} pada ${esc(tglPanjang(stD))}</div>
   <table><tbody>
   <tr><td style="width:170px">Nomor Agenda</td><td>${esc(m.nomor_agenda || "-")}</td></tr>
   <tr><td>Nomor Surat</td><td>${esc(m.nomor_surat)}</td></tr>
-  <tr><td>Tanggal Surat / Diterima</td><td>${esc(s.tanggal_surat)} / ${esc(s.tanggal_agenda)}</td></tr>
+  <tr><td>Tanggal Surat / Diterima</td><td>${esc(tglCtk(s.tanggal_surat))} / ${esc(tglCtk(s.tanggal_agenda))}</td></tr>
   <tr><td>Pengirim</td><td>${esc(s.asal || "-")}</td></tr>
   <tr><td>Perihal</td><td>${esc(m.perihal)}</td></tr>
   <tr><td>Sifat Surat</td><td>${esc(s.sifat)}</td></tr></tbody></table>
@@ -619,8 +621,11 @@ export default {
       if (path === "/api/me" && req.method === "GET") return json({ user, r2_aktif: !!env.FILES });
       if (path === "/api/me/password" && req.method === "PUT") {
         const b = await req.json();
+        const usr = await env.DB.prepare("SELECT * FROM users WHERE id=?").bind(user.id).first();
+        if (!usr || !(await checkHash(String(b.lama || ""), usr.password_hash))) return err("Kata sandi lama salah");
         if (!b.password || String(b.password).length < 8) return err("Password baru minimal 8 karakter");
         await env.DB.prepare("UPDATE users SET password_hash=? WHERE id=?").bind(await makeHash(String(b.password)), user.id).run();
+        await audit(env, user.id, "ganti-password", "user", user.id, "");
         return json({ ok: true });
       }
       if (path === "/api/dashboard") {

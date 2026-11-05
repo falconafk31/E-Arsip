@@ -209,3 +209,6 @@ input[type=range]{accent-color:var(--p)}
 
 /* HP: sel tabel satu baris; teks panjang dipotong 4 kata oleh ringkas() di sisi JS */
 @media(max-width:720px){.tw td{white-space:nowrap}}
+
+/* Bilah nama berkas + aksi di atas pratinjau detail surat */
+.pvbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bd);flex-wrap:wrap}.pvname{font-weight:600;font-size:13px;overflow-wrap:anywhere}

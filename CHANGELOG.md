@@ -2,6 +2,17 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.2.1] - 2026-11-05
+
+### Diperbaiki
+
+- Filter Buku Agenda: kolom bulan langsung terisi bulan berjalan saat halaman dibuka, sehingga pilihan "Per Bulan Ini" langsung menyaring dengan benar (sebelumnya kolom kosong membuat semua surat tampil).
+- Format tanggal pada tabel cetakan Buku Agenda dan Lembar Disposisi menjadi format Indonesia (contoh 25 Jul 2026); label periode agenda memakai nama bulan.
+- Blok tanda tangan pada cetakan Buku Agenda dan Rekap simetris: sisi Petugas Tata Usaha kini juga memakai baris kota dan tanggal seperti sisi pimpinan.
+- Ganti Password mewajibkan kata sandi lama dan konfirmasi kata sandi baru, dan tercatat di Audit.
+- Grafik "Aktivitas Surat 6 Bulan Terakhir" di Beranda menampilkan enam bulan secara utuh, termasuk bulan tanpa surat (nilai 0).
+- Pratinjau berkas pada detail surat dilengkapi bilah nama berkas dengan tombol Buka dan Unduh tepat di atas pratinjau, sehingga berkas tetap mudah diakses bila pratinjau bawaan peramban tidak menggambar PDF (misalnya Chrome di Android).
+
 ## [1.2.0] - 2026-11-05
 
 ### Ditambahkan
