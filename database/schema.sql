@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS klasifikasi (
 CREATE TABLE IF NOT EXISTS surat (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   jenis TEXT NOT NULL,
-  nomor_agenda TEXT UNIQUE,
+  nomor_agenda TEXT, -- nomor urut register (001, 002, ...) per jenis dan tahun; keunikan dijaga indeks idx_surat_agenda_register
   nomor_surat TEXT NOT NULL,
   tanggal_surat TEXT NOT NULL,
   tanggal_agenda TEXT NOT NULL,
@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS surat (
 );
 CREATE INDEX IF NOT EXISTS idx_surat_jenis_tanggal ON surat(jenis, tanggal_agenda);
 CREATE INDEX IF NOT EXISTS idx_surat_terhapus ON surat(terhapus_pada);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_surat_agenda_register ON surat(jenis, substr(tanggal_agenda,1,4), nomor_agenda) WHERE nomor_agenda IS NOT NULL;
 CREATE TABLE IF NOT EXISTS lampiran (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   surat_id INTEGER NOT NULL REFERENCES surat(id),
