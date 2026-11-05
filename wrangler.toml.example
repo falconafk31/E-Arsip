@@ -1,0 +1,16 @@
+# Contoh konfigurasi Wrangler sebagai alternatif deploy.py.
+# Salin menjadi wrangler.toml, isi ID database Anda, lalu:
+#   python3 build.py
+#   npx wrangler deploy
+name = "e-arsip"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "e-arsip-db"
+database_id = "ISI-UUID-DATABASE-D1-ANDA"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "e-arsip-files"

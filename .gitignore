@@ -1,0 +1,7 @@
+worker.js
+__pycache__/
+*.pyc
+.env
+.wrangler/
+node_modules/
+*.log
