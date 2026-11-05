@@ -2,6 +2,13 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.3.4] - 2026-11-05
+
+### Diperbaiki
+
+- Tombol Cetak PDF di Buku Agenda kini selalu mengikuti mode periode yang sedang tampil di layar (Per Bulan Ini, Triwulan Ini, Tahun Ini, Semua) dan tab register aktif. Sebelumnya, mengganti mode periode tidak memperbarui alamat cetak sehingga hasil cetak bisa kosong atau tidak sesuai tampilan.
+- Cetakan agenda menerima parameter rentang bulan (dari/sampai) untuk mode Triwulan, dengan label periode "Bulan sampai Bulan Tahun".
+
 ## [1.3.3] - 2026-11-05
 
 ### Diubah

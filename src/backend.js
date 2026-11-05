@@ -523,13 +523,15 @@ function printShell(title, kop, body, kaki) {
 async function cetakAgenda(req, env, user) {
   const u = new URL(req.url);
   const bulan = u.searchParams.get("bulan"), tahun = u.searchParams.get("tahun"), jenis = u.searchParams.get("jenis");
+  const dari = u.searchParams.get("dari"), sampai = u.searchParams.get("sampai");
   let where = "terhapus_pada IS NULL"; const binds = [];
+  if (dari && sampai) { where += " AND substr(tanggal_agenda,1,7)>=? AND substr(tanggal_agenda,1,7)<=?"; binds.push(dari, sampai); }
   if (bulan) { where += " AND substr(tanggal_agenda,1,7)=?"; binds.push(bulan); }
   if (tahun) { where += " AND substr(tanggal_agenda,1,4)=?"; binds.push(tahun); }
   if (jenis) { where += " AND jenis=?"; binds.push(jenis); }
   const stA = await getSettings(env);
   const { results } = await env.DB.prepare(`SELECT * FROM surat WHERE ${where} ORDER BY tanggal_agenda, id`).bind(...binds).all();
-  const periode = bulan ? `Periode ${BULAN_NAMA[parseInt(bulan.slice(5, 7), 10) - 1]} ${bulan.slice(0, 4)}` : tahun ? `Periode Tahun ${tahun}` : "Semua Periode";
+  const periode = dari && sampai ? `Periode ${BULAN_NAMA[parseInt(dari.slice(5, 7), 10) - 1]} sampai ${BULAN_NAMA[parseInt(sampai.slice(5, 7), 10) - 1]} ${sampai.slice(0, 4)}` : bulan ? `Periode ${BULAN_NAMA[parseInt(bulan.slice(5, 7), 10) - 1]} ${bulan.slice(0, 4)}` : tahun ? `Periode Tahun ${tahun}` : "Semua Periode";
   const judul = jenis === "masuk" ? "Buku Agenda Surat Masuk" : jenis === "keluar" ? "Buku Agenda Surat Keluar" : "Buku Agenda Surat";
   const rows = results.map((r, i) => { const m = maskSurat(user, r); if (jenis === "masuk") return `<tr><td>${esc(m.nomor_agenda || "-")}</td><td>${esc(tglCtk(r.tanggal_agenda))}</td><td>${esc(tglCtk(r.tanggal_surat))}</td><td>${esc(m.nomor_surat)}</td><td>${esc(r.asal || "-")}</td><td>${esc(m.perihal)}</td><td>${esc(r.klasifikasi || "-")}</td><td>${esc(r.sifat)}</td><td>${esc(r.status_disposisi || "-")}</td></tr>`; if (jenis === "keluar") return `<tr><td>${esc(m.nomor_agenda || "-")}</td><td>${esc(tglCtk(r.tanggal_surat))}</td><td>${esc(tglCtk(r.tanggal_agenda))}</td><td>${esc(m.nomor_surat)}</td><td>${esc(r.tujuan || "-")}</td><td>${esc(m.perihal)}</td><td>${esc(r.klasifikasi || "-")}</td><td>${esc(r.sifat)}</td><td>${esc(r.penandatangan || "-")}</td></tr>`; return `<tr><td>${i + 1}</td><td>${esc(tglCtk(r.tanggal_agenda))}</td><td>${r.jenis === "masuk" ? "Masuk" : "Keluar"}</td><td>${esc(m.nomor_agenda || "-")}</td><td>${esc(m.nomor_surat)}</td><td>${esc(r.asal || r.tujuan || "-")}</td><td>${esc(m.perihal)}</td></tr>`; }).join("");
   const body = `<style>@page{size:A4 landscape;margin:10mm}@media print{body{max-width:none;padding:0}}</style><div class="sub">${esc(judul.toUpperCase())} - ${esc(periode)} - dicetak oleh ${esc(user.nama)} pada ${esc(tglPanjang(stA))}</div>
