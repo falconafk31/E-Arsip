@@ -37,7 +37,7 @@ th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
     <div class="mn">
       <header class="top" id="topbar"></header>
       <main id="main"></main>
-      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.2.3</span></footer>
+      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.2.4</span></footer>
     </div>
   </div>
 </div>
@@ -119,12 +119,21 @@ function renderLogin(err) {
     } catch (er) { renderLogin(er.message); }
   };
 }
+function parseRute() {
+  const seg = String(location.hash || "").replace(/^#\/?/, "").split("/").filter(Boolean);
+  if (!seg.length) return null;
+  const p = seg[0];
+  if (["beranda", "masuk", "keluar", "disposisi", "agenda", "rekap", "sampah", "pengaturan", "audit", "guru"].includes(p)) return { p };
+  if (p === "detail" && seg[1]) return { p, arg: parseInt(seg[1], 10) || seg[1] };
+  if (p === "cari" && seg[1]) return { p, arg: { q: decodeURIComponent(seg.slice(1).join("/")) } };
+  return null;
+}
 async function masukAplikasi() {
   try { const m = await api("/api/me"); me = m.user; r2Aktif = !!m.r2_aktif; } catch (e) {}
   try { const k = await api("/api/klasifikasi"); klasList = k.items || []; } catch (e) {}
   try { const sd = await api("/api/settings"); SETTINGS = sd.settings || sd || {}; } catch (e) { SETTINGS = {}; }
   $("#loginView").hidden = true; $("#appView").hidden = false;
-  renderShell(); go("beranda");
+  renderShell(); const pr = parseRute(); if (pr) go(pr.p, pr.arg); else go("beranda");
 }
 async function keluar() { try { await api("/api/logout", { method: "POST" }); } catch (e) {} me = null; renderLogin(); }
 
@@ -161,6 +170,8 @@ function renderTop() {
 }
 function go(p, arg) {
   cur = { p, arg };
+  const RUTE = ["beranda", "masuk", "keluar", "disposisi", "agenda", "rekap", "sampah", "pengaturan", "audit", "guru", "detail", "cari"];
+  if (RUTE.includes(p)) { let h = "#/" + p; if (p === "detail" && arg != null) h += "/" + encodeURIComponent(arg); if (p === "cari" && arg && arg.q) h += "/" + encodeURIComponent(arg.q); try { history.replaceState(null, "", h); } catch (e) {} }
   document.body.classList.remove("nav");
   renderTop();
   const nk = p === "detail" && window._detailJenis ? window._detailJenis : p;
@@ -774,7 +785,7 @@ function setUmum() {
 function setPejabat() {
   $("#setBody").innerHTML = '<div class="card"><div class="ch"><h2>Pejabat Penanda Tangan</h2></div><div class="cb"><p class="mu" style="margin-bottom:16px">Nama ini tercetak otomatis pada blok tanda tangan Ringkasan PDF dan Buku Agenda, menggantikan garis kosong. Isi sesuai nama resmi kepala sekolah atau pimpinan instansi.</p>'
     + '<form id="formPejabat"><div class="fl"><label>Kota <span class="rq">muncul di atas tanda tangan cetak, diikuti tanggal hari pencetakan</span></label><input id="pjKota" value="' + esc(SETTINGS.kota || "") + '" placeholder="Contoh: Blora"></div><div class="fl"><label>Nama Kepala Madrasah <span class="rq">wajib untuk tanda tangan tercetak</span></label><input id="pjNama" value="' + esc(SETTINGS.nama_kepala || "") + '" placeholder="Contoh: Nama lengkap beserta gelar"></div>'
-    + '<div class="fl"><label>NIP <span class="rq">opsional</span></label><input id="pjNip" value="' + esc(SETTINGS.nip_kepala || "") + '" placeholder="Nomor Induk Pegawai bila ada"></div><div class="fl"><label>Nama Petugas Tata Usaha <span class="rq">tanda tangan kiri pada cetakan</span></label><input id="pjNamaPetugas" value="' + esc(SETTINGS.nama_petugas || "") + '" placeholder="Nama petugas yang menandatangani cetakan"></div><div class="fl"><label>NIP Petugas Tata Usaha <span class="rq">opsional</span></label><input id="pjNipPetugas" value="' + esc(SETTINGS.nip_petugas || "") + '" placeholder="Nomor Induk Pegawai bila ada"></div>'
+    + '<div class="fl"><label>NIP <span class="rq">opsional</span></label><input id="pjNip" value="' + esc(SETTINGS.nip_kepala || "") + '" placeholder="Nomor Induk Pegawai bila ada"></div><div class="fl"><label>Nama Petugas Tata Usaha <span class="rq">tanda tangan kanan pada cetakan</span></label><input id="pjNamaPetugas" value="' + esc(SETTINGS.nama_petugas || "") + '" placeholder="Nama petugas yang menandatangani cetakan"></div><div class="fl"><label>NIP Petugas Tata Usaha <span class="rq">opsional</span></label><input id="pjNipPetugas" value="' + esc(SETTINGS.nip_petugas || "") + '" placeholder="Nomor Induk Pegawai bila ada"></div>'
     + '<button class="btn" type="submit">' + ic("check") + "Simpan Pejabat</button></form>"
     + '<div class="sheet mt"><div style="text-align:right" class="mu">Contoh blok tanda tangan</div><div class="ttd"><div><div>' + esc((SETTINGS.kota ? SETTINGS.kota + ", " : "") + tglPanjangIni()) + '</div><div>Mengetahui,<br>Kepala Madrasah</div><div class="sg"></div><div><b><u>' + esc(SETTINGS.nama_kepala || "( nama pimpinan )") + "</u></b>" + (SETTINGS.nip_kepala ? "<br>NIP. " + esc(SETTINGS.nip_kepala) : "") + "</div></div></div></div></div></div>";
   $("#formPejabat").onsubmit = async (e) => {
