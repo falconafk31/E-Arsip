@@ -2,6 +2,14 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.4.2] - 2026-11-06
+
+### Diubah
+
+- Kartu statistik Beranda didesain ulang (arah Opsi 1 dari diskusi Terra, pewarnaan Skema Segar Tailwind, dipilih Hades): kotak ikon pastel diganti ikon kecil polos di samping label ringkas ("Surat Masuk", "Surat Keluar", "Disposisi"), angka utama diperbesar, dan keterangan dipisah menjadi baris kecil "Bulan ini - total N".
+- Notifikasi berkas belum diunggah di Beranda pindah ke dalam kartu statistik registernya sebagai baris status selebar kartu di dasar kartu (latar tint emerald untuk masuk, sky untuk keluar), masing-masing membuka daftar register tersebut dengan saringan "Berkas belum diunggah" aktif. Baris status hanya tampil bila hitungannya di atas nol.
+- Dua kartu berkas per register yang ditambahkan pada 1.4.1 dihapus kembali atas penilaian ulang Hades di hari yang sama: Beranda cukup memuat notifikasinya di kartu yang sudah ada, tanpa kartu tambahan.
+
 ## [1.4.1] - 2026-11-06
 
 ### Diubah
