@@ -160,7 +160,7 @@ function renderShell() {
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.4.0</div></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.4.1</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => (b.onclick = () => go(b.dataset.go)));
@@ -227,12 +227,13 @@ async function viewBeranda() {
   else peringatan = d.perhatian.map((x) => { const tl = terlambatDisp(x); return '<button class="pa" data-detail="' + (x.surat_id || "") + '"><span class="si ' + (tl ? "dg" : "wn") + '">' + ic(tl ? "warning" : "clock") + '</span><span style="flex:1"><b>' + esc(ringkas(x.perihal)) + "</b><small>" + esc(x.nomor_agenda || "") + " - kepada " + esc(x.kepada || "-") + ", batas " + fmtTgl(x.batas_waktu) + "</small></span>" + (tl ? '<span class="bd dg">Terlambat</span>' : badgeStatus(x.sts === "Baru" ? "Belum" : x.sts)) + "</button>"; }).join("");
   $("#main").innerHTML = headPage("Beranda", "Ringkasan kegiatan surat " + BULAN_ID[new Date().getMonth()] + " " + new Date().getFullYear(), '<button class="btn" id="bTambah">' + ic("plus") + "Tambah Surat</button>")
     + '<div class="card" style="margin-bottom:16px"><form class="sr" id="berandaCari" style="width:100%">' + ic("search") + '<input id="berandaQ" placeholder="Cari surat masuk atau keluar: nomor, perihal, asal, tujuan..." autocomplete="off" style="flex:1"></form></div>'
-    + '<div class="stats">'
+    + '<div class="stats tiga">'
     + '<div class="card st"><span class="si pr">' + ic("inbox") + '</span><div><div class="sn2">' + d.masuk_bulan_ini + "</div><small>Surat Masuk Bulan Ini - total " + d.total_masuk + "</small></div></div>"
     + '<div class="card st"><span class="si in">' + ic("outbox") + '</span><div><div class="sn2">' + d.keluar_bulan_ini + "</div><small>Surat Keluar Bulan Ini - total " + d.total_keluar + "</small></div></div>"
     + '<div class="card st"><span class="si wn">' + ic("disposition") + '</span><div><div class="sn2">' + d.disposisi_terbuka + "</div><small>Disposisi Belum Selesai - " + d.disposisi_terlambat + " terlambat</small></div></div>"
-    + '<div class="card st"><span class="si dg">' + ic("image") + '</span><div><div class="sn2">' + d.tanpa_scan + "</div><small>Surat Aktif Berkas Belum Diunggah</small></div></div>"
     + "</div>"
+    + '<div class="duoScan"><button class="card st klik" id="stScanMasuk"><span class="si dg">' + ic("image") + '</span><div><div class="sn2">' + d.tanpa_scan_masuk + '</div><small>Surat Masuk - Berkas Belum Diunggah</small></div><span class="go">→</span></button>'
+    + '<button class="card st klik" id="stScanKeluar"><span class="si dg">' + ic("image") + '</span><div><div class="sn2">' + d.tanpa_scan_keluar + '</div><small>Surat Keluar - Berkas Belum Diunggah</small></div><span class="go">→</span></button></div>'
     + '<div class="g2 mt"><div class="card"><div class="ch"><h2>Aktivitas Surat 6 Bulan Terakhir</h2><span class="lgd">Total surat per bulan</span></div><div class="cb" style="padding-top:4px">' + chart + "</div></div>"
     + '<div class="card"><div class="ch"><h2>Perlu Perhatian</h2>' + (d.disposisi_terlambat ? '<span class="bd dg">' + d.disposisi_terlambat + " terlambat</span>" : "") + '</div><div>' + peringatan + '</div><div class="cb" style="padding-top:14px"><button class="btn sec sm" id="bSemuaDisp">' + ic("disposition") + "Lihat Semua Disposisi</button></div></div></div>"
     + '<div class="card mt"><div class="ch"><h2>Surat Terbaru</h2><button class="btn sec sm" id="bSemuaSurat">' + ic("inbox") + "Lihat Semua</button></div>"
@@ -244,6 +245,9 @@ async function viewBeranda() {
   $("#berandaCari").onsubmit = (e) => { e.preventDefault(); const q = $("#berandaQ").value.trim(); if (q) go("cari", { q }); };
   $("#bSemuaDisp").onclick = () => go("disposisi");
   $("#bSemuaSurat").onclick = () => go("masuk");
+  const keTanpaScan = (jenis) => { if (!listState[jenis]) listState[jenis] = listStateBaru(jenis); listState[jenis].tanpa_scan = true; listState[jenis].page = 1; go(jenis); };
+  $("#stScanMasuk").onclick = () => keTanpaScan("masuk");
+  $("#stScanKeluar").onclick = () => keTanpaScan("keluar");
   $$("[data-detail]").forEach((el) => (el.onclick = () => { if (el.dataset.detail) { window._detailJenis = el.dataset.jenis || "masuk"; go("detail", parseInt(el.dataset.detail, 10)); } }));
 }
 
