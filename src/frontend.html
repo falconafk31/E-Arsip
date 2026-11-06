@@ -37,7 +37,7 @@ th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
     <div class="mn">
       <header class="top" id="topbar"></header>
       <main id="main"></main>
-      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.3.6</span></footer>
+      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span></footer>
     </div>
   </div>
 </div>
@@ -64,7 +64,7 @@ async function api(path, opt) {
   const r = await fetch(path, Object.assign({ headers: { "Content-Type": "application/json" } }, opt || {}));
   let d = {}; try { d = await r.json(); } catch (e) {}
   if (!r.ok) throw new Error(d.error || ("HTTP " + r.status));
-  if (metode === "GET") cacheGET.set(path, JSON.stringify(d)); else cacheGET.clear();
+  if (metode === "GET") cacheGET.set(path, JSON.stringify(d)); else { cacheGET.clear(); segarLencana(); }
   return d;
 }
 function rangka(n) { const w = [92, 76, 88, 64, 84, 70, 90, 68]; let h = '<div class="rkg" aria-hidden="true">'; for (let i = 0; i < (n || 5); i++) h += '<i style="width:' + w[i % w.length] + '%"></i>'; return h + "</div>"; }
@@ -147,9 +147,8 @@ async function keluar() { try { await api("/api/logout", { method: "POST" }); } 
 /* ---------- shell ---------- */
 const MENU = [
   ["UTAMA", [["beranda", "Beranda", "dashboard"], ["masuk", "Surat Masuk", "inbox"], ["keluar", "Surat Keluar", "outbox"], ["disposisi", "Disposisi", "disposition"]]],
-  ["DATA INDUK", [["guru", "Data Guru", "users"]]],
   ["LAPORAN", [["agenda", "Buku Agenda", "agenda"], ["rekap", "Rekap Tahunan", "report"]]],
-  ["ADMINISTRASI", [["sampah", "Tempat Sampah", "trash"], ["pengaturan", "Pengaturan", "settings"]]],
+  ["ADMINISTRASI", [["guru", "Data Guru", "users"], ["sampah", "Tempat Sampah", "trash"], ["pengaturan", "Pengaturan", "settings"]]],
 ];
 const JUDUL = { beranda: "Beranda", masuk: "Surat Masuk", keluar: "Surat Keluar", detail: "Detail Surat", disposisi: "Disposisi", form: "Tambah Surat", agenda: "Buku Agenda", rekap: "Rekap Tahunan", sampah: "Tempat Sampah", pengaturan: "Pengaturan", audit: "Audit", cari: "Pencarian", guru: "Data Guru" };
 function renderShell() {
@@ -158,21 +157,38 @@ function renderShell() {
   for (const [grup, items0] of MENU) {
     const items = grup === "ADMINISTRASI" && me.role === "admin" ? [...items0, ["audit", "Audit", "eye"]] : items0;
     h += '<div class="ng">' + grup + "</div>";
-    for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span></button>";
+    for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.4.0</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => (b.onclick = () => go(b.dataset.go)));
   $("#btnKeluar").onclick = () => konfirmasi("Keluar dari E-Arsip?", "Sesi Anda akan diakhiri. Anda perlu masuk lagi untuk melanjutkan pekerjaan.", "Keluar", keluar);
   $("#ovl").onclick = () => document.body.classList.remove("nav");
+  segarLencana();
 }
+async function segarLencana() {
+  try {
+    const d = await api("/api/lencana");
+    const b = $("#bdgDisp"), hd = $("#hDot");
+    if (b) { if (d.disposisi_belum > 0) { b.hidden = false; b.textContent = d.disposisi_belum > 99 ? "99+" : String(d.disposisi_belum); b.classList.toggle("tl", d.disposisi_telat > 0); } else b.hidden = true; }
+    if (hd) hd.hidden = !(d.disposisi_belum > 0);
+  } catch (e) {}
+}
+document.addEventListener("click", (e) => { const m = $("#aMenu"); if (m && !m.hidden && !(e.target.closest && e.target.closest(".akun"))) m.hidden = true; });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { const m = $("#aMenu"); if (m) m.hidden = true; } });
 function renderTop() {
-  $("#topbar").innerHTML = '<div class="acts"><button class="hb" id="hbBtn" aria-label="Buka menu">' + ic("menu") + '</button><span class="crumb"><span class="cinst">' + esc(namaInstansi()) + '</span><span class="sep">/</span><b>' + esc(JUDUL[cur.p] || "") + "</b></span></div>"
+  $("#topbar").innerHTML = '<div class="acts"><button class="hb" id="hbBtn" aria-label="Buka menu">' + ic("menu") + '<span class="hdot" id="hDot" hidden></span></button><span class="crumb"><span class="cinst">' + esc(namaInstansi()) + '</span><span class="sep">/</span><b>' + esc(JUDUL[cur.p] || "") + "</b></span></div>"
     + '<form class="gcari" id="gCari"><input id="gQ" placeholder="Cari surat masuk atau keluar..." autocomplete="off"></form>'
-    + '<div class="av" title="' + esc(me.nama) + '">' + esc(inisial(me.nama)) + "</div>";
+    + '<div class="akun"><button class="av" id="avBtn" title="' + esc(me.nama) + '" aria-label="Menu akun">' + esc(inisial(me.nama)) + '</button>'
+    + '<div class="amenu" id="aMenu" hidden><div class="am-h"><div class="av">' + esc(inisial(me.nama)) + '</div><div><b>' + esc(me.nama) + '</b><small>' + (me.username ? "@" + esc(me.username) + " - " : "") + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
+    + '<button id="amPass">' + ic("lock") + '<span>Ganti Password</span></button><div class="am-sep"></div>'
+    + '<button id="amOut" class="dg">' + ic("logout") + '<span>Keluar</span></button></div></div>';
   $("#hbBtn").onclick = () => document.body.classList.toggle("nav");
+  $("#avBtn").onclick = (e) => { e.stopPropagation(); const m = $("#aMenu"); m.hidden = !m.hidden; };
+  $("#amPass").onclick = () => { $("#aMenu").hidden = true; setTab = "password"; go("pengaturan"); };
+  $("#amOut").onclick = () => { $("#aMenu").hidden = true; konfirmasi("Keluar dari E-Arsip?", "Sesi Anda akan diakhiri. Anda perlu masuk lagi untuk melanjutkan pekerjaan.", "Keluar", keluar); };
   $("#gCari").onsubmit = (e) => { e.preventDefault(); const q = $("#gQ").value.trim(); if (q) go("cari", { q }); };
 }
 function go(p, arg) {
@@ -181,6 +197,7 @@ function go(p, arg) {
   if (RUTE.includes(p)) { let h = "#/" + p; if (p === "detail" && arg != null) h += "/" + encodeURIComponent(arg); if (p === "cari" && arg && arg.q) h += "/" + encodeURIComponent(arg.q); try { history.replaceState(null, "", h); } catch (e) {} }
   document.body.classList.remove("nav");
   renderTop();
+  segarLencana();
   const nk = p === "detail" && window._detailJenis ? window._detailJenis : p;
   $$("#sb .nv[data-k]").forEach((n) => n.classList.toggle("on", n.dataset.k === nk || (p === "form" && false)));
   const fn = { beranda: viewBeranda, masuk: () => viewList("masuk"), keluar: () => viewList("keluar"), detail: viewDetail, disposisi: viewDisposisi, form: viewForm, agenda: viewAgenda, rekap: viewRekap, sampah: viewSampah, pengaturan: viewPengaturan, audit: viewAudit, cari: viewCari, guru: viewGuru }[p];
@@ -746,8 +763,9 @@ async function viewPengaturan() {
   if (me.role === "admin") tabs.push(["users", "Pengguna", "users"]);
   $("#main").innerHTML = headPage("Pengaturan", "Kop surat, pejabat penanda tangan, klasifikasi, zona waktu, kata sandi, dan pengguna")
     + '<div class="set"><div class="snav card cb" style="padding:12px">' + tabs.map(([k, l, i]) => '<button data-tab="' + k + '" class="' + (setTab === k ? "on" : "") + '">' + ic(i) + l + "</button>").join("") + '</div><div id="setBody"></div></div>';
-  $$(".snav [data-tab]").forEach((b) => (b.onclick = () => { setTab = b.dataset.tab; viewPengaturan(); }));
-  ({ kop: setKop, pejabat: setPejabat, klasifikasi: setKlasifikasi, umum: setUmum, password: setPassword, users: setUsers })[setTab]();
+  const jalankanTab = () => ({ kop: setKop, pejabat: setPejabat, klasifikasi: setKlasifikasi, umum: setUmum, password: setPassword, users: setUsers })[setTab]();
+  $$(".snav [data-tab]").forEach((b) => (b.onclick = () => { if (setTab === b.dataset.tab) return; setTab = b.dataset.tab; $$(".snav [data-tab]").forEach((x) => x.classList.toggle("on", x === b)); b.scrollIntoView({ block: "nearest", inline: "center" }); jalankanTab(); }));
+  jalankanTab();
 }
 function kopPreviewHtml() {
   const g = SETTINGS.kop_gaya_garis || "double";
