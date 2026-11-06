@@ -33,7 +33,7 @@ Skema lengkap ada di `database/schema.sql`; pembaruan berurutan ada di `database
 
 ## Aturan bisnis penting
 
-- Nomor agenda masuk terbit otomatis dengan format `A-{tahun}-{urut 4 digit}`, dihitung per tahun dan kembali ke 0001 tiap tahun baru. Nomor surat keluar diisi manual; nomor yang sama memunculkan peringatan tetapi tidak memblokir.
+- Nomor Agenda terbit otomatis untuk surat masuk DAN surat keluar, berupa nomor urut polos 001, 002, ... tanpa awalan huruf, dihitung sendiri-sendiri per register (masuk/keluar) dan per tahun, dan kembali ke 001 tiap tahun baru. Penomoran mengikuti urutan pencatatan (Tanggal Agenda, yaitu tanggal dicatat TU), BUKAN Tanggal Surat: surat yang terlambat dicatat mengambil nomor berikutnya yang kosong, dan nomor yang sudah terbit tidak pernah digeser, ditukar, atau diterbitkan ulang (aturan dikunci 6 November 2026). Nomor surat yang sama memunculkan peringatan duplikat tetapi tidak memblokir.
 - Alur berkas: catat dulu, berkas menyusul. Surat tanpa Berkas Surat ditandai "Berkas belum diunggah" di daftar, beranda, dan rekap.
 - Kelengkapan hanya dihitung dari lampiran berjenis `berkas_surat`. Batas: Berkas Surat maks 5 per surat, total semua berkas maks 10 per surat, 10 MB per berkas, logo kop maks 2 MB. Format diterima: PDF, JPG, PNG, WEBP, diperiksa dari magic bytes, bukan dari ekstensi.
 - Status disposisi surat masuk tersinkron otomatis: tanpa disposisi berarti Belum, ada disposisi terbuka berarti Diproses, semua disposisi selesai berarti Selesai. Surat keluar tidak didisposisi; status tampilnya Terkirim.

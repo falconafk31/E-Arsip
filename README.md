@@ -9,7 +9,7 @@ Catat surat dulu, berkas menyusul: nomor agenda terbit otomatis begitu surat dic
 ## Fitur utama
 
 **Surat masuk dan keluar**
-- Nomor Agenda otomatis untuk surat masuk dan keluar (nomor urut 001, 002, ... terpisah per register dan per tahun) dan peringatan surat ganda.
+- Nomor Agenda otomatis untuk surat masuk dan keluar (nomor urut 001, 002, ... terpisah per register dan per tahun) dan peringatan surat ganda. Penomoran mengikuti urutan pencatatan (Tanggal Agenda), bukan Tanggal Surat: surat yang terlambat dicatat mengambil nomor berikutnya, dan nomor yang sudah terbit tidak pernah digeser.
 - Klasifikasi (Umum, Kurikulum, Kepegawaian, Keuangan, Sarana dan Prasarana, bisa ditambah), sifat surat Biasa/Penting/Segera/Rahasia, lokasi arsip fisik, dan penandatangan.
 - Filter status, sifat, bulan agenda, pencarian, dan sortir klik pada kepala kolom di semua tabel.
 
@@ -28,7 +28,7 @@ Catat surat dulu, berkas menyusul: nomor agenda terbit otomatis begitu surat dic
 - Surat keluar bisa ditandai sebagai Surat Tugas atau SPPD, ditautkan ke surat masuk yang ditindaklanjuti (misalnya undangan), dan diisi daftar guru yang ditugaskan. Nama penerima disposisi dibantu daftar guru aktif.
 
 **Laporan**
-- Buku Agenda per tahun ajaran atau tahun kalender dan Rekap Tahunan: ringkasan PDF, buku agenda PDF, dan tiga berkas CSV.
+- Buku Agenda dua register (masuk dan keluar) dengan cetakan A4 landscape per register dari menu Buku Agenda, dan Rekap Tahunan: ringkasan PDF dan tiga berkas CSV.
 - Kop surat diatur dari formulir Pengaturan (tiga baris kop, alamat, kontak, logo, gaya garis) dan mengikuti format ketentuan Kemenag. Tidak ada nama instansi yang tertanam di kode.
 
 **Pengguna, peran, dan audit**
@@ -119,6 +119,7 @@ Skema versi terbaru juga tersedia sebagai migrasi berurutan di `database/migrati
 
 - `0001_skema_awal.sql` - skema dasar (pengguna, surat, lampiran, disposisi, audit, pengaturan).
 - `0002_guru_berkas_penugasan.sql` - tabel guru dan relasi penugasan, kolom jenis berkas, dan tautan surat induk.
+- `0003-agenda-register.sql` - Nomor Agenda per register untuk surat masuk dan keluar, awalan huruf dihapus, indeks unik gabungan per register dan tahun.
 
 Terapkan berkas yang belum pernah dijalankan secara berurutan, misalnya `npx wrangler d1 execute e-arsip-db --remote --file database/migrations/0002_guru_berkas_penugasan.sql`. Untuk instalasi baru, `database/schema.sql` sudah memuat semuanya sekaligus.
 
