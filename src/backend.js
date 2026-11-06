@@ -633,6 +633,11 @@ export default {
         await audit(env, user.id, "ganti-password", "user", user.id, "");
         return json({ ok: true });
       }
+      if (path === "/api/lencana" && req.method === "GET") {
+        const belum = await env.DB.prepare("SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai'").first().then(r => r.c);
+        const telat = await env.DB.prepare("SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai' AND d.batas_waktu IS NOT NULL AND d.batas_waktu < ?").bind(todayWIB()).first().then(r => r.c);
+        return json({ disposisi_belum: belum, disposisi_telat: telat });
+      }
       if (path === "/api/dashboard") {
         const ym = todayWIB().slice(0, 7);
         const t = async sql => (await env.DB.prepare(sql).first()).c;

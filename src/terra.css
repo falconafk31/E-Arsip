@@ -240,3 +240,26 @@ input[type=range]{accent-color:var(--p)}
 .rkcell{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;background:var(--sf2)}
 .rkcell small{color:var(--tm);font-size:11.5px}
 .rkcell b{font-size:17px}
+
+/* 1.4.0 - lencana disposisi, menu akun avatar, versi bilah sisi */
+.bdg{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#E8A13A;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.bdg.tl{background:#D64545}
+.bdg[hidden]{display:none}
+.sver{font-size:11px;color:#CFE9E2;opacity:.8;padding:10px 12px 0}
+@media(min-width:721px){#sb .us,#sb #btnKeluar{display:none}}
+@media(min-width:721px) and (max-width:1024px){.sver{display:none}.nv{position:relative}.bdg{position:absolute;top:5px;right:5px;margin:0;min-width:16px;height:16px;font-size:9px;padding:0 4px}}
+.akun{position:relative}
+.akun .av{cursor:pointer;font:inherit}
+.amenu{position:absolute;right:0;top:calc(100% + 10px);width:252px;background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:0 16px 38px rgba(16,42,67,.20);z-index:80;overflow:hidden;text-align:left}
+.amenu[hidden]{display:none}
+.am-h{display:flex;gap:10px;align-items:center;padding:12px 14px;background:#F2F7F5;border-bottom:1px solid var(--bd)}
+.am-h b{display:block;font-size:14px;color:#1C2B3A}
+.am-h small{display:block;color:#7186A0;font-size:12px}
+.amenu>button{display:flex;gap:10px;align-items:center;width:100%;padding:11px 14px;background:none;border:0;cursor:pointer;font:inherit;font-size:14px;color:#1C2B3A;text-align:left}
+.amenu>button:hover{background:#F2F7F5}
+.amenu>button.dg{color:#C0392B}
+.amenu .ic{width:18px;height:18px;flex:none}
+.am-sep{height:1px;background:var(--bd)}
+.hb{position:relative}
+.hdot{position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#D64545;border:2px solid #fff}
+.hdot[hidden]{display:none}

@@ -2,6 +2,27 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.4.0] - 2026-11-06
+
+### Ditambahkan
+
+- Menu akun pada avatar di kanan atas bilah atas: kepala berisi nama, username, dan peran; jalan pintas Ganti Password yang membuka tab kata sandi di Pengaturan; dan tombol Keluar. Menu menutup saat diklik di luar, ditekan Esc, atau sesudah memilih isinya.
+- Lencana angka pada menu Disposisi di bilah sisi: jumlah disposisi yang belum selesai, berwarna kuning, dan berubah merah bila ada yang lewat batas waktu. Di HP, tombol hamburger juga mendapat titik merah penanda selama masih ada disposisi yang belum selesai. Angka diperbarui saat aplikasi dibuka, setiap berpindah menu, dan sesudah setiap perubahan data, melalui endpoint baru GET /api/lencana.
+
+### Diubah
+
+- Susunan menu bilah sisi dirapikan: kelompok DATA INDUK yang hanya berisi satu menu dihapus, Data Guru pindah ke kelompok ADMINISTRASI (Data Guru, Tempat Sampah, Pengaturan, Audit).
+- Di desktop, kartu pengguna dan tombol Keluar di bawah bilah sisi disembunyikan karena fungsinya pindah ke menu akun avatar; di HP keduanya tetap tampil di dalam laci menu, mengingat komputer madrasah dipakai bersama dan petugas perlu melihat sedang masuk sebagai siapa.
+- Teks versi aplikasi pindah dari kaki halaman konten ke dasar bilah sisi.
+
+### Diperbaiki
+
+- Mengganti tab di Pengaturan tidak lagi menggambar ulang seluruh halaman: layar tidak meloncat ke atas dan tab yang aktif selalu tergulir ke dalam pandangan pada bilah tab HP. Sebelumnya tab aktif yang letaknya di kanan (Klasifikasi, Umum, Password, Pengguna) terdorong keluar layar.
+
+### Catatan
+
+- Rancangan bilah navigasi bawah khusus HP dan kisi dua kolom untuk tab Pengaturan sempat dimockup, lalu ditolak Hades dan tidak diterapkan.
+
 ## [1.3.6] - 2026-11-06
 
 ### Ditambahkan
