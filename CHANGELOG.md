@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.4.1] - 2026-11-06
+
+### Diubah
+
+- Beranda: kartu statistik gabungan "Surat Aktif Berkas Belum Diunggah" diganti dua kartu per register, "Surat Masuk - Berkas Belum Diunggah" dan "Surat Keluar - Berkas Belum Diunggah", masing-masing dengan hitungannya sendiri. Keduanya dapat diklik dan membuka daftar register tersebut dengan saringan "Berkas belum diunggah" aktif. Angka gabungan sebelumnya dinilai rancu karena tidak jelas berkas surat apa saja yang belum diunggah. Tiga kartu statistik lain kini sebaris sendiri di atas kedua kartu ini. (Opsi yang dipilih Hades; opsi kartu khusus berisi daftar surat terlama ditolak karena membuat Beranda ramai.)
+
 ## [1.4.0] - 2026-11-06
 
 ### Ditambahkan

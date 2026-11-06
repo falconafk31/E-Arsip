@@ -652,6 +652,8 @@ export default {
           disposisi_terbuka: await t("SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai'"),
           disposisi_terlambat: await env.DB.prepare("SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai' AND d.batas_waktu IS NOT NULL AND d.batas_waktu < ?").bind(todayWIB()).first().then(r => r.c),
           tanpa_scan: await t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
+          tanpa_scan_masuk: await t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND s.jenis='masuk' AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
+          tanpa_scan_keluar: await t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND s.jenis='keluar' AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
           per_bulan: perBulan.results, terbaru: terbaru.results.map(r => maskSurat(user, r)), perhatian: perhatian.results,
         });
       }

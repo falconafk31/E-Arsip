@@ -263,3 +263,12 @@ input[type=range]{accent-color:var(--p)}
 .hb{position:relative}
 .hdot{position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#D64545;border:2px solid #fff}
 .hdot[hidden]{display:none}
+
+/* 1.4.1 - kartu berkas per register di Beranda (Opsi A) */
+.stats.tiga{grid-template-columns:repeat(3,1fr)}
+@media(max-width:1100px){.stats.tiga{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.stats.tiga{grid-template-columns:1fr}}
+.duoScan{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.st.klik{cursor:pointer;font:inherit;color:inherit;text-align:left;width:100%}
+.st.klik:hover{border-color:#9DB9D2}
+.st .go{margin-left:auto;color:#1668C4;font-weight:700;font-size:19px;flex:none}
