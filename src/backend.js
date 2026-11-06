@@ -607,9 +607,10 @@ export default {
         const usr = await env.DB.prepare("SELECT * FROM users WHERE username=? AND aktif=1").bind(String(b.username || "").trim()).first();
         if (!usr || !(await checkHash(String(b.password || ""), usr.password_hash))) return err("Username atau password salah", 401);
         const tok = crypto.randomUUID() + crypto.randomUUID();
-        await env.DB.prepare("INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, datetime('now','+7 days'))").bind(tok, usr.id).run();
-        await audit(env, usr.id, "login", "users", usr.id, "");
-        return json({ ok: true, user: { id: usr.id, username: usr.username, nama: usr.nama, role: usr.role } }, 200, { "Set-Cookie": `${SESSION_COOKIE}=${tok}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800` });
+        const ingat = b.ingat === true;
+        await env.DB.prepare("INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, datetime('now', ?))").bind(tok, usr.id, ingat ? "+30 days" : "+1 day").run();
+        await audit(env, usr.id, "login", "users", usr.id, ingat ? "ingat saya" : "");
+        return json({ ok: true, user: { id: usr.id, username: usr.username, nama: usr.nama, role: usr.role } }, 200, { "Set-Cookie": `${SESSION_COOKIE}=${tok}; Path=/; HttpOnly; Secure; SameSite=Lax${ingat ? "; Max-Age=2592000" : ""}` });
       }
       // semua rute di bawah wajib login
       const user = await currentUser(req, env);
@@ -850,6 +851,34 @@ export default {
         const b = await req.json();
         if (!b.nama) return err("Nama klasifikasi wajib diisi");
         await env.DB.prepare("INSERT OR IGNORE INTO klasifikasi (kode, nama) VALUES (?,?)").bind(b.kode || null, b.nama).run();
+        return json({ ok: true });
+      }
+      if (path.startsWith("/api/klasifikasi/") && req.method === "PUT") {
+        if (!needRole(user, ["admin", "petugas"])) return err("Tidak boleh mengubah klasifikasi", 403);
+        const id = parseInt(path.split("/")[3], 10);
+        const b = await req.json();
+        const namaBaru = String(b.nama || "").trim();
+        if (!namaBaru) return err("Nama klasifikasi wajib diisi");
+        const lama = await env.DB.prepare("SELECT * FROM klasifikasi WHERE id=?").bind(id).first();
+        if (!lama) return err("Klasifikasi tidak ditemukan", 404);
+        const bentrok = await env.DB.prepare("SELECT id FROM klasifikasi WHERE nama=? AND id<>?").bind(namaBaru, id).first();
+        if (bentrok) return err("Nama klasifikasi sudah dipakai klasifikasi lain");
+        if (namaBaru !== lama.nama) {
+          await env.DB.prepare("UPDATE klasifikasi SET nama=? WHERE id=?").bind(namaBaru, id).run();
+          await env.DB.prepare("UPDATE surat SET klasifikasi=? WHERE klasifikasi=?").bind(namaBaru, lama.nama).run();
+          await audit(env, user.id, "ubah", "klasifikasi", id, lama.nama + " -> " + namaBaru);
+        }
+        return json({ ok: true });
+      }
+      if (path.startsWith("/api/klasifikasi/") && req.method === "DELETE") {
+        if (!needRole(user, ["admin", "petugas"])) return err("Tidak boleh menghapus klasifikasi", 403);
+        const id = parseInt(path.split("/")[3], 10);
+        const lama = await env.DB.prepare("SELECT * FROM klasifikasi WHERE id=?").bind(id).first();
+        if (!lama) return err("Klasifikasi tidak ditemukan", 404);
+        const pakai = await env.DB.prepare("SELECT COUNT(*) c FROM surat WHERE klasifikasi=?").bind(lama.nama).first();
+        if (pakai.c > 0) return err("Klasifikasi masih dipakai " + pakai.c + " surat, tidak bisa dihapus");
+        await env.DB.prepare("DELETE FROM klasifikasi WHERE id=?").bind(id).run();
+        await audit(env, user.id, "hapus", "klasifikasi", id, lama.nama);
         return json({ ok: true });
       }
       if (path === "/api/settings" && req.method === "GET") return json({ settings: await getSettings(env) });

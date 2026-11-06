@@ -2,6 +2,21 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.3.6] - 2026-11-06
+
+### Ditambahkan
+
+- Klasifikasi surat kini bisa diubah namanya dan dihapus dari Pengaturan. Pengubahan nama berlaku surut ke semua surat yang memakai klasifikasi tersebut; klasifikasi yang masih dipakai surat tidak bisa dihapus dan aplikasi menjelaskan jumlah pemakainya. Keduanya tercatat di Audit.
+- Kotak "Ingat saya di perangkat ini (30 hari)" pada halaman masuk, kini tidak tercentang sebagai bawaan. Bila dicentang, sesi berlaku 30 hari; bila tidak, sesi berakhir saat peramban ditutup.
+
+### Diubah
+
+- Ringkasan di bawah Rekap Tahunan (disposisi belum selesai, terlambat, berkas belum diunggah, lokasi fisik, nomor agenda terakhir) kini tampil sebagai sel-sel terpisah berkotak, menggantikan satu baris teks panjang.
+
+### Diperbaiki
+
+- Halaman detail surat keluar tidak lagi menampilkan baris "Status Disposisi" yang kosong; sebagai gantinya tampil baris "Status: Terkirim", selaras dengan daftar surat keluar.
+
 ## [1.3.5] - 2026-11-05
 
 ### Dihapus
