@@ -37,7 +37,7 @@ th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
     <div class="mn">
       <header class="top" id="topbar"></header>
       <main id="main"></main>
-      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.3.5</span></footer>
+      <footer class="appfoot"><span>E-Arsip - Arsip Surat Masuk dan Keluar Madrasah</span><span>Versi 1.3.6</span></footer>
     </div>
   </div>
 </div>
@@ -113,13 +113,14 @@ function renderLogin(err) {
     + '<div class="fl"><label>Nama Pengguna</label><input id="liUser" autocomplete="username" required></div>'
     + '<div class="fl"><label>Kata Sandi</label><div class="pw"><input id="liPass" type="password" autocomplete="current-password" required><button type="button" id="liEye" aria-label="Tampilkan kata sandi">' + ic("eye") + "</button></div></div>"
     + (err ? '<p class="er">' + esc(err) + "</p>" : "")
+    + '<label class="acts" style="gap:6px;font-weight:500"><input type="checkbox" id="liIngat" style="width:auto;height:auto"> Ingat saya di perangkat ini (30 hari)</label>'
     + '<button class="btn lgb" id="liBtn" type="submit">' + ic("lock") + "<span>Masuk</span></button></form></div></div>";
   $("#liEye").onclick = () => { const i = $("#liPass"); i.type = i.type === "password" ? "text" : "password"; };
   $("#formLogin").onsubmit = async (e) => {
     e.preventDefault();
     const b = $("#liBtn"); b.disabled = true; b.innerHTML = '<span class="spin"></span><span>Memproses...</span>';
     try {
-      const d = await api("/api/login", { method: "POST", body: JSON.stringify({ username: $("#liUser").value.trim(), password: $("#liPass").value }) });
+      const d = await api("/api/login", { method: "POST", body: JSON.stringify({ username: $("#liUser").value.trim(), password: $("#liPass").value, ingat: $("#liIngat").checked }) });
       me = d.user; await masukAplikasi();
     } catch (er) { renderLogin(er.message); }
   };
@@ -316,7 +317,7 @@ async function viewDetail(id) {
     ["Nomor Agenda", s.nomor_agenda || "-"], ["Nomor Surat", s.nomor_surat], ["Jenis", s.jenis === "masuk" ? "Surat Masuk" : "Surat Keluar"],
     ["Tanggal Surat", fmtTgl(s.tanggal_surat)], ["Tanggal Agenda", fmtTgl(s.tanggal_agenda)],
     s.jenis === "masuk" ? ["Asal Surat", s.asal || "-"] : ["Tujuan Surat", s.tujuan || "-"],
-    ["Perihal", s.perihal], ["Klasifikasi", s.klasifikasi || "-"], ["Sifat Surat", s.sifat], ["Status Disposisi", s.status_disposisi],
+    ["Perihal", s.perihal], ["Klasifikasi", s.klasifikasi || "-"], ["Sifat Surat", s.sifat], s.jenis === "masuk" ? ["Status Disposisi", s.status_disposisi] : ["Status", "Terkirim"],
   ];
   if (s.ringkasan) baris.push(["Ringkasan", s.ringkasan]);
   if (s.lokasi_fisik) baris.push(["Lokasi Arsip Fisik", s.lokasi_fisik]);
@@ -659,7 +660,7 @@ async function viewRekap() {
     + '<div id="rkTab-klas" hidden><div class="tw"><table><thead><tr><th style="width:52px">No</th><th>Klasifikasi</th><th>Masuk</th><th>Keluar</th><th>Total</th></tr></thead><tbody>' + barisKlas + "</tbody></table></div></div>"
     + '<div id="rkTab-sifat" hidden><div class="tw"><table><thead><tr><th style="width:52px">No</th><th>Sifat Surat</th><th>Masuk</th><th>Keluar</th><th>Total</th></tr></thead><tbody>' + barisSifat + "</tbody></table></div></div>"
     + '<div id="rkTab-disp" hidden><div class="tw"><table><thead><tr><th style="width:52px">No</th><th>Status</th><th>Jumlah</th></tr></thead><tbody>' + barisDisp + "</tbody></table></div></div>"
-    + '<p class="mu" style="margin-top:14px">Disposisi belum selesai: <b>' + (d.totals.disposisi_belum || 0) + "</b> - Terlambat: <b>" + d.disposisi_terlambat + "</b> - Berkas belum diunggah: <b>" + d.tanpa_scan + "</b> - Lokasi fisik belum diisi: <b>" + d.tanpa_lokasi + '</b> - Nomor Agenda terakhir: Masuk <b>' + String((d.agenda_terakhir || {}).masuk || 0).padStart(3, "0") + '</b> - Keluar <b>' + String((d.agenda_terakhir || {}).keluar || 0).padStart(3, "0") + "</b></p>";
+    + '<div class="rkstrip"><div class="rkcell"><small>Disposisi Belum Selesai</small><b>' + (d.totals.disposisi_belum || 0) + '</b></div><div class="rkcell"><small>Disposisi Terlambat</small><b>' + d.disposisi_terlambat + '</b></div><div class="rkcell"><small>Berkas Belum Diunggah</small><b>' + d.tanpa_scan + '</b></div><div class="rkcell"><small>Lokasi Fisik Belum Diisi</small><b>' + d.tanpa_lokasi + '</b></div><div class="rkcell"><small>Nomor Agenda Terakhir - Masuk</small><b>' + String((d.agenda_terakhir || {}).masuk || 0).padStart(3, "0") + '</b></div><div class="rkcell"><small>Nomor Agenda Terakhir - Keluar</small><b>' + String((d.agenda_terakhir || {}).keluar || 0).padStart(3, "0") + "</b></div></div>";
   $("#rkTahun").onchange = (e) => { rekapTahun = e.target.value; viewRekap(); };
   $$("#rkTabs button").forEach((b) => (b.onclick = () => { $$("#rkTabs button").forEach((x) => x.classList.toggle("on", x === b)); ["bulan", "klas", "sifat", "disp"].forEach((t) => ($("#rkTab-" + t).hidden = t !== b.dataset.tab)); }));
 }
@@ -813,9 +814,11 @@ function setPejabat() {
 async function setKlasifikasi() {
   try { const k = await api("/api/klasifikasi"); klasList = k.items || []; } catch (e) {}
   $("#setBody").innerHTML = '<div class="card"><div class="ch"><h2>Klasifikasi Surat</h2></div><div class="cb">'
-    + (klasList.length ? klasList.map((k) => '<div class="acts" style="justify-content:space-between;border-bottom:1px solid var(--bd);padding:8px 0"><b>' + esc(k.nama) + '</b><span class="mu">Kode: ' + esc(k.kode || "-") + "</span></div>").join("") : '<p class="mu">Belum ada klasifikasi.</p>')
+    + (klasList.length ? klasList.map((k) => '<div class="acts" style="justify-content:space-between;border-bottom:1px solid var(--bd);padding:8px 0"><span><b>' + esc(k.nama) + '</b> <span class="mu">Kode: ' + esc(k.kode || "-") + '</span></span><span class="acts"><button class="btn sec sm" data-klas-ubah="' + k.id + '">Ubah</button><button class="btn dgo sm" data-klas-hapus="' + k.id + '">Hapus</button></span></div>').join("") : '<p class="mu">Belum ada klasifikasi.</p>')
     + '<form id="formKlas" class="acts mt"><input id="klNama" placeholder="Nama klasifikasi baru" required style="flex:1"><button class="btn" type="submit">' + ic("plus") + "Tambah</button></form></div></div>";
   $("#formKlas").onsubmit = async (e) => { e.preventDefault(); try { await api("/api/klasifikasi", { method: "POST", body: JSON.stringify({ nama: $("#klNama").value.trim() }) }); toast("Klasifikasi ditambahkan"); setKlasifikasi(); } catch (er) { toast(er.message, true); } };
+  $$("[data-klas-ubah]").forEach((b) => b.onclick = () => { const k = klasList.find((x) => String(x.id) === b.dataset.klasUbah); if (!k) return; modal('<h2 style="margin-bottom:8px">Ubah Klasifikasi</h2><p class="mu" style="margin-bottom:14px">Nama baru berlaku juga untuk semua surat yang memakai klasifikasi ini.</p><div class="fl"><label>Nama Klasifikasi</label><input id="klNamaBaru" value="' + esc(k.nama) + '"></div><div class="acts end"><button class="btn sec" id="klUbahBatal">Batal</button><button class="btn" id="klUbahSimpan">Simpan</button></div>'); $("#klUbahBatal").onclick = () => tutupModal(); $("#klUbahSimpan").onclick = async () => { const nama = $("#klNamaBaru").value.trim(); if (!nama) { toast("Nama klasifikasi wajib diisi", true); return; } try { await api("/api/klasifikasi/" + k.id, { method: "PUT", body: JSON.stringify({ nama }) }); tutupModal(); toast("Klasifikasi diubah"); setKlasifikasi(); } catch (er) { toast(er.message, true); } }; });
+  $$("[data-klas-hapus]").forEach((b) => b.onclick = () => { const k = klasList.find((x) => String(x.id) === b.dataset.klasHapus); if (!k) return; modal('<h2 style="margin-bottom:8px">Hapus Klasifikasi</h2><p class="mu" style="margin-bottom:20px">Hapus klasifikasi <b>' + esc(k.nama) + '</b>? Klasifikasi yang masih dipakai surat tidak bisa dihapus.</p><div class="acts end"><button class="btn sec" id="klHapusBatal">Batal</button><button class="btn dg" id="klHapusYa">Hapus</button></div>'); $("#klHapusBatal").onclick = () => tutupModal(); $("#klHapusYa").onclick = async () => { try { await api("/api/klasifikasi/" + k.id, { method: "DELETE" }); tutupModal(); toast("Klasifikasi dihapus"); setKlasifikasi(); } catch (er) { toast(er.message, true); } }; });
 }
 function setPassword() {
   $("#setBody").innerHTML = '<div class="card"><div class="ch"><h2>Ganti Password Saya</h2></div><div class="cb"><form id="formPw"><div class="fl"><label>Password Lama</label><input id="pwLama" type="password" required autocomplete="current-password"></div><div class="fl"><label>Password Baru <span class="rq">minimal 8 karakter</span></label><input id="pwBaru" type="password" required minlength="8" autocomplete="new-password"></div><div class="fl"><label>Ulangi Password Baru</label><input id="pwUlangi" type="password" required minlength="8" autocomplete="new-password"></div><button class="btn" type="submit">' + ic("lock") + "Ganti Password</button></form></div></div>";
