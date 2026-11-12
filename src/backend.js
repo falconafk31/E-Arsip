@@ -643,7 +643,7 @@ export default {
         const t = async sql => (await env.DB.prepare(sql).first()).c;
         const perBulan = await env.DB.prepare("SELECT substr(tanggal_agenda,6,2) bln, COUNT(*) total FROM surat WHERE terhapus_pada IS NULL AND tanggal_agenda >= date('now','-5 months','start of month') GROUP BY substr(tanggal_agenda,1,7) ORDER BY substr(tanggal_agenda,1,7)").all();
         const terbaru = await env.DB.prepare("SELECT s.*, (SELECT COUNT(*) FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat') file_count FROM surat s WHERE s.terhapus_pada IS NULL ORDER BY s.id DESC LIMIT 8").all();
-        const perhatian = await env.DB.prepare("SELECT s.perihal, s.nomor_agenda, d.kepada, d.batas_waktu, d.status sts FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai' ORDER BY (d.batas_waktu IS NULL), d.batas_waktu LIMIT 6").all();
+        const perhatian = await env.DB.prepare("SELECT s.perihal, s.nomor_agenda, d.kepada, d.batas_waktu, d.status sts FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai' ORDER BY (d.batas_waktu IS NULL), d.batas_waktu LIMIT 5").all();
         return json({
           masuk_bulan_ini: await t(`SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND jenis='masuk' AND substr(tanggal_agenda,1,7)='${ym}'`),
           keluar_bulan_ini: await t(`SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND jenis='keluar' AND substr(tanggal_agenda,1,7)='${ym}'`),

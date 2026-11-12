@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.4.9] - 2026-11-12
+
+### Diubah
+
+- P9 minimal (keputusan Hades, bukan rombak beranda): pil status tiap baris Perlu Perhatian kini menyertakan tanggal batas waktu ("Terlambat · 10 Nov", "Belum · 14 Nov"); batas item Perlu Perhatian dari 6 menjadi 5. Layout beranda tidak berubah.
+
 ## [1.4.8] - 2026-11-12
 
 ### Diperbaiki
