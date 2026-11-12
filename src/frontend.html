@@ -53,6 +53,11 @@ const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&":
 const ringkas = (s, n) => { if (s == null || !window.matchMedia("(max-width: 720px)").matches) return s; const k = String(s).trim().split(/\s+/); const b = n || 4; return k.length > b ? k.slice(0, b).join(" ") + "..." : s; };
 const ic = (n, cls) => '<svg class="ic ' + (cls || "") + '" aria-hidden="true"><use href="#i-' + n + '"/></svg>';
 const BULAN_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+function opsiBulan(sel) { return '<option value="">Semua bulan</option>' + BULAN_ID.map((nm, i) => '<option value="' + String(i + 1).padStart(2, "0") + '" ' + (sel === String(i + 1).padStart(2, "0") ? "selected" : "") + ">" + nm + "</option>").join(""); }
+function opsiTahun(sel) { const y0 = new Date().getFullYear(); const th = [y0 - 2, y0 - 1, y0, y0 + 1]; return '<option value="">Semua tahun</option>' + th.map((y) => '<option value="' + y + '" ' + (String(sel) === String(y) ? "selected" : "") + ">" + y + "</option>").join(""); }
+function bulanDari(m, t) { if (!m) return ""; return (t || new Date().getFullYear()) + "-" + m; }
+function jmlFilter(st) { return (st.bulan ? 1 : 0) + (st.sifat ? 1 : 0) + (st.klasifikasi ? 1 : 0) + (st.status ? 1 : 0) + (st.tanpa_scan ? 1 : 0); }
+function segarFilterBtn(jenis) { const st = listState[jenis]; const b = $("#bFilter"); if (!b) return; const n = jmlFilter(st); b.className = n ? "btn" : "btn sec"; b.innerHTML = "Filter" + (n ? ' <span class="fcnt">' + n + "</span>" : ""); const p = $("#fPanel"); if (p) p.classList.toggle("buka", !!st.panel); }
 let me = null, r2Aktif = false, klasList = [], SETTINGS = {};
 let cur = { p: "beranda" };
 const ROLE_LABEL = { admin: "Administrator", petugas: "Petugas TU", pimpinan: "Pimpinan", viewer: "Pengamat" };
@@ -162,7 +167,7 @@ function renderShell() {
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.4.5</div></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.4.6</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => (b.onclick = () => go(b.dataset.go)));
@@ -253,7 +258,7 @@ async function viewBeranda() {
 
 /* ---------- daftar surat masuk / keluar ---------- */
 const listState = { masuk: null, keluar: null };
-function listStateBaru(jenis) { return { q: "", bulan: "", sifat: "", klasifikasi: "", status: "", tanpa_scan: false, page: 1, sort: "tanggal", dir: "asc", jenis, pilih: new Set() }; }
+function listStateBaru(jenis) { return { q: "", bulan: "", bulanM: "", bulanT: "", sifat: "", klasifikasi: "", status: "", tanpa_scan: false, page: 1, sort: "tanggal", dir: "asc", jenis, pilih: new Set(), panel: false }; }
 async function viewList(jenis) {
   if (!listState[jenis]) listState[jenis] = listStateBaru(jenis);
   const st = listState[jenis];
@@ -263,15 +268,18 @@ async function viewList(jenis) {
     : '<select id="fKlas" class="flt"><option value="">Semua Klasifikasi</option>' + klasList.map((k) => '<option ' + (st.klasifikasi === k.nama ? "selected" : "") + ">" + esc(k.nama) + "</option>").join("") + "</select>";
   $("#main").innerHTML = headPage(judul, jenis === "masuk" ? "Surat yang diterima instansi" : "Surat yang dikirim instansi", '<button class="btn" id="bTambah">' + ic("plus") + "Tambah Surat</button>")
     + '<div class="card"><div class="tb"><span class="tcnt" id="tbCount"></span><div class="sr">' + ic("search") + '<input id="fQ" placeholder="Cari nomor, perihal, ' + (jenis === "masuk" ? "asal" : "tujuan") + '..." value="' + esc(st.q) + '"></div>'
-    + '<input type="month" id="fBulan" class="flt" style="width:auto" value="' + esc(st.bulan) + '">' + filter2
+    + '<button class="' + (jmlFilter(st) ? "btn" : "btn sec") + '" id="bFilter" type="button">Filter' + (jmlFilter(st) ? ' <span class="fcnt">' + jmlFilter(st) + "</span>" : "") + "</button>" + (canEditNow() ? '<button class="btn dg sm" id="bHapusMassal" disabled>Hapus Terpilih</button>' : "") + '</div>'
+    + '<div class="frow' + (st.panel ? " buka" : "") + '" id="fPanel"><span class="flab">Bulan:</span><select id="fBulanM" class="flt" style="width:150px">' + opsiBulan(st.bulanM) + '</select><select id="fBulanT" class="flt" style="width:112px"' + (st.bulanM ? "" : " disabled") + '>' + opsiTahun(st.bulanT) + "</select>" + filter2
     + (jenis === "masuk" ? '<select id="fStatus" class="flt"><option value="">Semua Status</option>' + ["Belum", "Diproses", "Selesai"].map((s) => '<option ' + (st.status === s ? "selected" : "") + ">" + s + "</option>").join("") + "</select>" : "")
     + '<label class="acts" style="gap:6px;font-weight:500"><input type="checkbox" id="fScan" style="width:auto;height:auto" ' + (st.tanpa_scan ? "checked" : "") + "> Berkas belum diunggah</label>"
-    + '<button class="btn lk" id="fReset">Atur Ulang</button>' + (canEditNow() ? '<button class="btn dg sm" id="bHapusMassal" disabled>Hapus Terpilih</button>' : "") + '</div>'
+    + '<button class="btn lk" id="fReset">Atur Ulang</button></div>'
     + '<div id="listBody"><div class="cb">' + rangka(6) + '</div></div></div><input type="file" id="quickFile" hidden multiple accept=".pdf,.jpg,.jpeg,.png,.webp">';
   $("#bTambah").onclick = () => go("form", { jenis });
   const reload = () => { st.page = 1; muatList(jenis); };
   let tQ; $("#fQ").oninput = (e) => { clearTimeout(tQ); tQ = setTimeout(() => { st.q = e.target.value; reload(); }, 300); };
-  $("#fBulan").onchange = (e) => { st.bulan = e.target.value; reload(); };
+  $("#fBulanM").onchange = (e) => { st.bulanM = e.target.value; if (!st.bulanM) st.bulanT = ""; else if (!st.bulanT) st.bulanT = String(new Date().getFullYear()); st.bulan = bulanDari(st.bulanM, st.bulanT); const t = $("#fBulanT"); t.disabled = !st.bulanM; t.value = st.bulanT; reload(); };
+  $("#fBulanT").onchange = (e) => { st.bulanT = e.target.value; st.bulan = bulanDari(st.bulanM, st.bulanT); reload(); };
+  $("#bFilter").onclick = () => { st.panel = !st.panel; segarFilterBtn(jenis); };
   const fs = $("#fSifat"); if (fs) fs.onchange = (e) => { st.sifat = e.target.value; reload(); };
   const fk = $("#fKlas"); if (fk) fk.onchange = (e) => { st.klasifikasi = e.target.value; reload(); };
   const fst = $("#fStatus"); if (fst) fst.onchange = (e) => { st.status = e.target.value; reload(); };
@@ -290,6 +298,7 @@ async function viewList(jenis) {
 }
 async function muatList(jenis) {
   const st = listState[jenis];
+  segarFilterBtn(jenis);
   const qs = new URLSearchParams({ jenis, page: st.page });
   if (st.q) qs.set("q", st.q); if (st.bulan) qs.set("bulan", st.bulan); if (st.sifat) qs.set("sifat", st.sifat);
   if (st.klasifikasi) qs.set("klasifikasi", st.klasifikasi); if (st.status) qs.set("status", st.status); if (st.tanpa_scan) qs.set("tanpa_scan", "1");
@@ -305,7 +314,7 @@ async function muatList(jenis) {
   if (st.sifat) chips.push(["sifat", "Sifat: " + st.sifat]);
   if (st.status) chips.push(["status", "Status: " + st.status]);
   if (st.tanpa_scan) chips.push(["tanpa_scan", "Berkas belum diunggah" + (d.total ? " (" + d.total + " surat)" : "")]);
-  let h = (chips.length ? '<div class="chips">' + chips.map(([k, l]) => '<span class="chip">' + esc(l) + '<button type="button" data-chip="' + k + '" aria-label="Hapus filter">×</button></span>').join("") + "</div>" : "") + '<div class="tw"><table class="a"><thead><tr>' + "<th style=\"width:40px\"><input type=\"checkbox\" id=\"selSemua\" aria-label=\"Pilih semua surat\"></th><th style=\"width:52px\">No</th>" + thUrut("Nomor Surat", "nomor", st) + thUrut("Tanggal Agenda", "tanggal", st) + thUrut("Perihal", "perihal", st) + "<th>" + (jenis === "masuk" ? "Asal" : "Tujuan") + "</th>" + thUrut("Klasifikasi", "klasifikasi", st) + thUrut("Sifat", "sifat", st) + thUrut("Status", "status", st) + "<th>Aksi</th></tr></thead><tbody>";
+  let h = (chips.length ? '<div class="chips">' + chips.map(([k, l]) => '<span class="chip">' + esc(l) + '<button type="button" data-chip="' + k + '" aria-label="Hapus filter"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></button></span>').join("") + "</div>" : "") + '<div class="tw"><table class="a"><thead><tr>' + "<th style=\"width:40px\"><input type=\"checkbox\" id=\"selSemua\" aria-label=\"Pilih semua surat\"></th><th style=\"width:52px\">No</th>" + thUrut("Nomor Surat", "nomor", st) + thUrut("Tanggal Agenda", "tanggal", st) + thUrut("Perihal", "perihal", st) + "<th>" + (jenis === "masuk" ? "Asal" : "Tujuan") + "</th>" + thUrut("Klasifikasi", "klasifikasi", st) + thUrut("Sifat", "sifat", st) + thUrut("Status", "status", st) + "<th>Aksi</th></tr></thead><tbody>";
   d.items.forEach((r, idx) => {
     h += '<tr class="rw" data-id="' + r.id + '"><td><input type="checkbox" class="row-check" data-id="' + r.id + '"' + (st.pilih.has(r.id) ? " checked" : "") + ' aria-label="Pilih surat"></td><td>' + ((st.page - 1) * 25 + idx + 1) + '</td><td><b>' + esc(r.nomor_surat) + "</b><small>Agenda " + esc(r.nomor_agenda || "-") + "</small></td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td><b>" + esc(ringkas(r.perihal)) + "</b>" + (r.file_count ? '<small>' + r.file_count + ' berkas surat</small>' + (r.pendukung_count ? '<small>' + r.pendukung_count + ' lampiran pendukung</small>' : '') : '<div style="margin-top:4px"><span class="bd dg">' + ic("upload") + 'Berkas belum diunggah</span></div>') + "</td><td>" + esc(ringkas((jenis === "masuk" ? r.asal : r.tujuan) || "-")) + "</td><td>" + esc(r.klasifikasi || "-") + "</td><td>" + badgeSifat(r.sifat) + "</td><td>" + (jenis === "masuk" ? badgeStatus(r.status_disposisi) + (() => { const tg = labelTenggat(r.tenggat); return tg ? '<div style="margin-top:4px"><span class="bd ' + tg.k + '">' + tg.t + "</span></div>" : ""; })() : '<span class="bd ok">Terkirim</span>') + '</td><td><span class="acts" style="justify-content:flex-end">' + (canEditNow() && r2Aktif && !r.file_count ? '<button class="btn sec sm" data-unggah="' + r.id + '">' + ic("upload") + "Unggah</button>" : "") + '<button class="btn lk" data-detail="' + r.id + '">Detail</button></span></td></tr>';
   });
@@ -318,7 +327,7 @@ async function muatList(jenis) {
   $$("#listBody tr.rw").forEach((tr) => (tr.onclick = () => { window._detailJenis = jenis; go("detail", parseInt(tr.dataset.id, 10)); }));
   $$("#listBody [data-pg]").forEach((b) => (b.onclick = () => { st.page = parseInt(b.dataset.pg, 10); muatList(jenis); }));
   ikatUrut(st, () => muatList(jenis));
-  $$("#listBody [data-chip]").forEach((b) => (b.onclick = () => { const k = b.dataset.chip; if (k === "tanpa_scan") st.tanpa_scan = false; else st[k] = ""; st.page = 1; viewList(jenis); }));
+  $$("#listBody [data-chip]").forEach((b) => (b.onclick = () => { const k = b.dataset.chip; if (k === "tanpa_scan") st.tanpa_scan = false; else st[k] = ""; if (k === "bulan") { st.bulanM = ""; st.bulanT = ""; } st.page = 1; viewList(jenis); }));
   $$("#listBody [data-unggah]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); const qf2 = $("#quickFile"); qf2.dataset.target = b.dataset.unggah; qf2.click(); }));
   $$("#listBody .row-check").forEach((c) => { c.onclick = (e) => e.stopPropagation(); c.onchange = () => { const id = parseInt(c.dataset.id, 10); if (c.checked) st.pilih.add(id); else st.pilih.delete(id); segarMassal(jenis); }; });
   const sa = $("#selSemua"); if (sa) sa.onchange = () => { $$("#listBody .row-check").forEach((c) => { c.checked = sa.checked; const id = parseInt(c.dataset.id, 10); if (sa.checked) st.pilih.add(id); else st.pilih.delete(id); }); segarMassal(jenis); };
@@ -618,9 +627,11 @@ async function imporGuru(file) {
 /* ---------- buku agenda ---------- */
 const agState = { bulan: (() => { const t = new Date(); return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0"); })(), jenis: "masuk", sort: "tanggal", dir: "asc", mode: "bulan" };
 async function viewAgenda() {
+  const agBM = /^\d{4}-(\d{2})$/.test(agState.bulan) ? agState.bulan.slice(5, 7) : "";
+  const agBT = /^\d{4}/.test(agState.bulan) ? agState.bulan.slice(0, 4) : "";
   $("#main").innerHTML = headPage("Buku Agenda", "Buku agenda resmi surat masuk dan surat keluar",
     '<button class="btn sec" id="agCsv">' + ic("download") + 'Unduh CSV</button><a class="btn" id="agPdf" target="_blank">' + ic("print") + "Cetak PDF</a>")
-    + '<div class="card"><div class="agTabs"><button type="button" class="agTab" data-tab="masuk">Surat Masuk</button><button type="button" class="agTab" data-tab="keluar">Surat Keluar</button></div><div class="tb"><input type="month" id="agBulan" style="width:auto" value="' + esc(agState.bulan) + '">'
+    + '<div class="card"><div class="agTabs"><button type="button" class="agTab" data-tab="masuk">Surat Masuk</button><button type="button" class="agTab" data-tab="keluar">Surat Keluar</button></div><div class="tb"><span class="flab">Bulan:</span><select id="agBulanM" class="flt" style="width:150px"' + (agState.mode === "bulan" ? "" : " disabled") + '>' + opsiBulan(agBM) + '</select><select id="agBulanT" class="flt" style="width:112px"' + (agState.mode === "bulan" && agBM ? "" : " disabled") + '>' + opsiTahun(agBT) + "</select>" 
     + '<select id="agMode" class="flt"><option value="bulan">Per Bulan Ini</option><option value="triwulan">Triwulan Ini</option><option value="tahun">Tahun Ini</option><option value="semua">Semua</option></select></div>'
     + '<div id="agBody"><div class="cb">' + rangka(7) + '</div></div></div>';
   const qs = () => { const q = new URLSearchParams(); if (agState.bulan) q.set("bulan", agState.bulan); if (agState.jenis) q.set("jenis", agState.jenis); return q; };
@@ -630,9 +641,12 @@ async function viewAgenda() {
     else if (agState.bulan) q.set("bulan", agState.bulan);
     if (agState.jenis) q.set("jenis", agState.jenis);
     $("#agPdf").href = "/cetak/agenda?" + q;
+    const abm = $("#agBulanM"), abt = $("#agBulanT");
+    if (abm && abt) { abm.disabled = agState.mode !== "bulan"; abt.disabled = agState.mode !== "bulan" || !/^\d{4}-\d{2}$/.test(agState.bulan); abm.value = /^\d{4}-(\d{2})$/.test(agState.bulan) ? agState.bulan.slice(5, 7) : ""; abt.value = /^\d{4}/.test(agState.bulan) ? agState.bulan.slice(0, 4) : ""; }
     if (agState.mode === "triwulan") muatAgendaMode("triwulan"); else muatAgenda(); };
   $("#agCsv").onclick = () => toast("CSV tersedia per tahun di menu Rekap Tahunan (ringkasan, masuk, keluar)");
-  $("#agBulan").onchange = (e) => { agState.bulan = e.target.value; segar(); };
+  $("#agBulanM").onchange = (e) => { const m = e.target.value; const t = $("#agBulanT"); if (!m) { agState.bulan = ""; } else { if (!t.value) t.value = String(new Date().getFullYear()); agState.bulan = t.value + "-" + m; } segar(); };
+  $("#agBulanT").onchange = (e) => { const m = $("#agBulanM").value; if (m) agState.bulan = e.target.value + "-" + m; segar(); };
   $$(".agTab").forEach((b) => { b.classList.toggle("on", b.dataset.tab === agState.jenis); b.onclick = () => { agState.jenis = b.dataset.tab; $$(".agTab").forEach((x) => x.classList.toggle("on", x === b)); segar(); }; });
   $("#agMode").onchange = (e) => {
     agState.mode = e.target.value;
@@ -641,7 +655,6 @@ async function viewAgenda() {
     else if (e.target.value === "triwulan") agState.bulan = y + "-" + String(Math.floor((m - 1) / 3) * 3 + 1).padStart(2, "0");
     else if (e.target.value === "tahun") agState.bulan = String(y);
     else agState.bulan = "";
-    $("#agBulan").value = /^\d{4}-\d{2}$/.test(agState.bulan) ? agState.bulan : "";
     segar(); return;
   };
   segar();
