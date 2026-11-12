@@ -167,7 +167,7 @@ function renderShell() {
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.4.8</div></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.4.9</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => (b.onclick = () => go(b.dataset.go)));
@@ -218,6 +218,7 @@ function headPage(judul, sub, aksiHtml) {
 function kosong(teks, sub) { return '<div class="em">' + ic("inbox") + "<b>" + esc(teks) + "</b><span>" + esc(sub || "") + "</span></div>"; }
 
 /* ---------- beranda ---------- */
+function pilPerhatian(x) { const tl = terlambatDisp(x); const tgl = x.batas_waktu ? " · " + fmtTgl(x.batas_waktu) : ""; if (tl) return '<span class="bd dg">' + ic("warning") + "Terlambat" + tgl + "</span>"; if (x.sts === "Diproses") return '<span class="bd in">' + ic("clock") + "Diproses" + tgl + "</span>"; return '<span class="bd wn">' + ic("clock") + "Belum" + tgl + "</span>"; }
 async function viewBeranda() {
   $("#main").innerHTML = headPage("Beranda", "Memuat ringkasan...") + '<div class="card cb">' + rangka(5) + "</div>";
   let d; try { d = await api("/api/dashboard"); } catch (e) { $("#main").innerHTML = headPage("Beranda", "") + '<div class="card cb er">' + esc(e.message) + "</div>"; return; }
@@ -231,7 +232,7 @@ async function viewBeranda() {
   chart += "</div>";
   let peringatan = "";
   if (!d.perhatian.length) peringatan = '<div class="cb mu">Tidak ada disposisi yang perlu perhatian. Semua tindak lanjut selesai.</div>';
-  else peringatan = d.perhatian.map((x) => { const tl = terlambatDisp(x); return '<button class="pa" data-detail="' + (x.surat_id || "") + '"><span class="si ' + (tl ? "dg" : "wn") + '">' + ic(tl ? "warning" : "clock") + '</span><span style="flex:1"><b>' + esc(ringkas(x.perihal)) + "</b><small>" + esc(x.nomor_agenda || "") + " - kepada " + esc(x.kepada || "-") + ", batas " + fmtTgl(x.batas_waktu) + "</small></span>" + (tl ? '<span class="bd dg">Terlambat</span>' : badgeStatus(x.sts === "Baru" ? "Belum" : x.sts)) + "</button>"; }).join("");
+  else peringatan = d.perhatian.map((x) => { const tl = terlambatDisp(x); return '<button class="pa" data-detail="' + (x.surat_id || "") + '"><span class="si ' + (tl ? "dg" : "wn") + '">' + ic(tl ? "warning" : "clock") + '</span><span style="flex:1"><b>' + esc(ringkas(x.perihal)) + "</b><small>" + esc(x.nomor_agenda || "") + " - kepada " + esc(x.kepada || "-") + ", batas " + fmtTgl(x.batas_waktu) + "</small></span>" + pilPerhatian(x) + "</button>"; }).join("");
   $("#main").innerHTML = headPage("Beranda", "Ringkasan kegiatan surat " + BULAN_ID[new Date().getMonth()] + " " + new Date().getFullYear(), '<button class="btn" id="bTambah">' + ic("plus") + "Tambah Surat</button>")
     + '<div class="card" style="margin-bottom:16px"><form class="sr" id="berandaCari" style="width:100%">' + ic("search") + '<input id="berandaQ" placeholder="Cari surat masuk atau keluar: nomor, perihal, asal, tujuan..." autocomplete="off" style="flex:1"></form></div>'
     + '<div class="stats tiga">'
