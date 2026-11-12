@@ -376,3 +376,32 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--p);vertical-align
 .pilih-satu b{font-size:13.5px}
 .pilih-satu small{display:block;color:var(--tm);font-size:12px}
 .pilih-satu .x{margin-left:auto;width:26px;height:26px;border:0;border-radius:50%;background:#fff;border:1px solid var(--bd2);color:var(--tm);cursor:pointer;flex:none;font-size:16px;line-height:1}
+
+/* 1.5.5 - tombol pil penuh + bilah aksi bawah Opsi B (gantikan radius 5px Terra P3 1.4.5) */
+.btn{height:40px;padding:0 18px;border-radius:999px;text-decoration:none;box-shadow:0 1px 2px rgba(15,36,27,.12),0 4px 12px rgba(46,125,104,.28)}
+.btn.sec,.btn.dgo{box-shadow:0 1px 2px rgba(15,36,27,.06)}
+.btn.dg{box-shadow:0 1px 2px rgba(15,36,27,.12),0 4px 12px rgba(197,56,56,.25)}
+.btn.lk,.btn.blk,.btn.danger-txt{box-shadow:none}
+.btn:disabled{box-shadow:none}
+.btn.blk{background:none;border:0;color:var(--tm);font-weight:700;font-size:13px;padding:0 4px;height:40px;display:inline-flex;align-items:center;cursor:pointer;white-space:nowrap}
+.btn.blk:hover{color:var(--p)}
+.btn.danger-txt{background:none;border:0;color:var(--dg);font-weight:700;font-size:13px;padding:0 4px;height:40px;display:inline-flex;align-items:center;cursor:pointer;white-space:nowrap}
+.btn.danger-txt:hover{background:#FDE7E7}
+.backlink{display:inline-flex;align-items:center;gap:6px;color:var(--tm);font-size:13.5px;font-weight:600;text-decoration:none;margin-bottom:10px;cursor:pointer;background:none;border:0;padding:0;font-family:inherit}
+.backlink:hover{color:var(--p)}
+.pg button{border-radius:999px}
+.bbar{display:none}
+.sheet{position:fixed;left:0;right:0;bottom:66px;z-index:41;background:#fff;border-top:1px solid var(--bd);border-radius:14px 14px 0 0;box-shadow:0 -8px 24px rgba(15,36,27,.14);padding:8px 12px 14px}
+.sheet .grab{width:36px;height:4px;border-radius:2px;background:var(--bd2);margin:4px auto 10px}
+.sheet button{display:flex;width:100%;align-items:center;gap:10px;border:0;background:none;padding:12px 8px;font:inherit;font-size:14px;text-align:left;cursor:pointer;border-radius:8px}
+.sheet button:hover{background:var(--sf2)}
+.sheet button.red{color:var(--dg)}
+@media(max-width:720px){
+  .bbar{display:flex;gap:8px;position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--bd);box-shadow:0 -4px 16px rgba(15,36,27,.08)}
+  .bbar .btn{flex:1;height:44px}
+  .bbar .btn.ico{flex:0 0 44px;padding:0;font-size:18px}
+  .phd .acts.sembunyi-hp{display:none}
+  .backlink.sembunyi-hp{display:none}
+  .fbar{position:sticky;bottom:0;z-index:30;background:#fff;box-shadow:0 -4px 16px rgba(15,36,27,.08)}
+  body.adabar .ts{bottom:92px}
+}

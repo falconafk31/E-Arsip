@@ -2,6 +2,14 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.5] - 2026-11-12
+
+### Diubah
+
+- Tombol global jadi pil penuh (Opsi B + remake tombol, menggantikan radius 5px Terra P3 1.4.5): `.btn` radius 999px, tinggi 40px, tombol utama + bayangan halus; tombol kecil tetap 32px; tombol ikon hapus lampiran jadi lingkaran; tombol login pil lebar 44px; pagination (Sebelumnya/Berikutnya + nomor halaman) ikut jadi pil; garis bawah "Cetak Lembar Disposisi" dihilangkan (`text-decoration:none` di `.btn`).
+- Halaman Detail di HP: bilah aksi bawah [Tambah Disposisi] [Ubah] [titik tiga] + lembar "Lainnya" (Kembali, Cetak Lembar Disposisi, Pindah ke Sampah). Di desktop, baris aksi memakai hierarki baru: Kembali jadi tautan panah di atas judul, Tambah Disposisi tombol utama hijau, Ubah/Cetak outline, Pindah ke Sampah teks merah. Berlaku untuk admin dan pengamat (pengamat: bilah berisi Cetak + titik tiga).
+- Formulir Tambah/Ubah Surat di HP: Batal + Simpan Surat menempel di bawah layar (bilah menempel); di desktop tetap di ujung bawah formulir. Toast di HP digeser ke atas bilah bawah supaya tombol aksinya tetap bisa diketuk.
+
 ## [1.5.4] - 2026-11-12
 
 ### Diubah
