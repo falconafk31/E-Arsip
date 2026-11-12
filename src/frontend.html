@@ -189,7 +189,7 @@ function renderShell() {
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.5.3</div></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.5.4</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => {
@@ -218,7 +218,7 @@ async function segarLencana() {
   } catch (e) {}
 }
 document.addEventListener("click", (e) => { const m = $("#aMenu"); if (m && !m.hidden && !(e.target.closest && e.target.closest(".akun"))) m.hidden = true; });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") { const m = $("#aMenu"); if (m) m.hidden = true; const mr = $("#modalRoot"); if (mr && mr.innerHTML.trim() !== "") mr.innerHTML = ""; } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { const m = $("#aMenu"); if (m) m.hidden = true; const mr = $("#modalRoot"); if (mr && mr.innerHTML.trim() !== "") mr.innerHTML = ""; $$(".pick-list").forEach((el) => el.remove()); } });
 function renderTop() {
   $("#topbar").innerHTML = '<div class="acts"><button class="hb" id="hbBtn" aria-label="Buka menu">' + ic("menu") + '<span class="hdot" id="hDot" hidden></span></button><span class="crumb"><span class="cinst">' + esc(namaInstansi()) + '</span><span class="sep">/</span><b>' + esc(JUDUL[cur.p] || "") + "</b></span></div>"
     + '<form class="gcari" id="gCari"><input id="gQ" placeholder="Cari surat masuk atau keluar..." autocomplete="off"></form>'
@@ -525,7 +525,7 @@ async function viewDisposisi() {
 let formFiles = [];
 async function viewForm(arg) {
   const id = arg && arg.id ? arg.id : null;
-  let s = null, detEdit = null;
+  let s = null, detEdit = null; const guruPilih = new Map(); let indukPilih = null;
   if (id) { try { detEdit = await api("/api/surat/" + id); s = detEdit.surat; } catch (e) { toast(e.message, true); go("beranda"); return; } }
   const jenis = s ? s.jenis : (arg && arg.jenis) || "masuk";
   formFiles = []; window._guruDimuat = false;
@@ -550,27 +550,67 @@ async function viewForm(arg) {
     + '<div class="fl" id="wrapTtd"><label>Penandatangan <span class="rq">untuk surat keluar</span></label><input id="fsTtd" value="' + esc(s ? s.penandatangan || "" : "") + '" placeholder="Nama penandatangan surat"></div>'
     + '</div></div><div class="fs" id="wrapPenugasan"><h3>Penugasan - Surat Tugas dan SPPD</h3><div class="fg">'
     + '<div class="fl"><label>Jenis Penugasan</label><select id="fsPenugasan"><option value="">Bukan surat penugasan</option>' + ["Surat Tugas", "SPPD"].map((x) => '<option ' + (s && s.jenis_penugasan === x ? "selected" : "") + ">" + x + "</option>").join("") + '</select><small class="mu">Pilih bila surat keluar ini adalah Surat Tugas atau Surat Perjalanan Dinas.</small></div>'
-    + '<div class="fl"><label>Menindaklanjuti Surat Masuk</label><select id="fsInduk"><option value="">- Tidak ada -</option></select><small class="mu">Pilih undangan atau surat masuk yang ditindaklanjuti, bila ada.</small></div>'
-    + '<div class="fl w"><label>Guru / Staff yang Ditugaskan</label><div class="sr" style="margin-bottom:8px">' + ic("search") + '<input id="fsGuruCari" placeholder="Cari nama guru atau staff..."></div><div id="fsGuruList"><span class="mu">Memuat data guru...</span></div></div>'
+    + '<div class="fl"><label>Menindaklanjuti Surat Masuk</label><div class="sr">' + ic("search") + '<input id="fsIndukCari" placeholder="Ketik nomor, perihal, atau nomor agenda..." autocomplete="off"></div><div class="pick" id="fsIndukPick"></div><div id="fsIndukPilih"></div><small class="mu">Ketik untuk mencari undangan atau surat masuk yang ditindaklanjuti. Hanya 10 hasil teratas yang ditampilkan.</small></div>'
+    + '<div class="fl w"><label>Guru / Staff yang Ditugaskan</label><div class="sr">' + ic("search") + '<input id="fsGuruCari" placeholder="Ketik nama guru atau staff..." autocomplete="off"></div><div class="pick" id="fsGuruPick"></div><div class="chips" id="fsGuruChip"></div><small class="mu">Guru yang dipilih tampil sebagai chip; ketuk &#215; untuk menghapus, ketik lagi untuk menambah.</small></div>'
     + '</div></div><div class="fs"><h3>Berkas Surat</h3>'
     + '<button type="button" class="dz" id="fsDrop"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Pilih berkas surat</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas, maks 5 berkas" + (r2Aktif ? "" : " - upload belum aktif") + '</span></button><ul class="fi2" id="fsFileList"></ul><p class="mu" style="margin-top:8px">Berkas dapat dilengkapi menyusul dari halaman Detail. Lampiran pendukung surat keluar (foto kegiatan, daftar hadir) juga ditambahkan dari halaman Detail.</p>'
     + '</div><div class="fs"><h3>Keterangan</h3><div class="fg"><div class="fl w"><label>Catatan</label><textarea id="fsKet" placeholder="Catatan tambahan tentang surat ini">' + esc(s ? s.keterangan || "" : "") + '</textarea></div></div></div><div class="cb" style="border-top:1px solid var(--bd)"><div class="acts end"><button type="button" class="btn sec" id="bBatal2">Batal</button><button class="btn" type="submit" id="fsSimpan">' + ic("check") + (id ? "Simpan Perubahan" : "Simpan Surat") + "</button></div></div></div></form>";
   const syncJenis = () => { const j = $("#fsJenis").value; $("#wrapAsal").style.display = j === "masuk" ? "" : "none"; $("#wrapTujuan").style.display = j === "keluar" ? "" : "none"; $("#wrapTtd").style.display = j === "keluar" ? "" : "none"; const wp = $("#wrapPenugasan"); if (wp) wp.style.display = j === "keluar" ? "" : "none"; };
   $("#fsJenis").onchange = syncJenis; syncJenis();
   async function muatOpsiPenugasan() {
-    const selInduk = $("#fsInduk"); const listGuru = $("#fsGuruList");
-    if (!selInduk || !listGuru) return;
-    try {
-      const gd = await api("/api/guru?aktif=1");
-      window._guruDimuat = true;
-      const terpilih = new Set(((detEdit && detEdit.guru_ditugaskan) || []).map((g) => g.guru_id));
-      listGuru.innerHTML = (gd.items || []).length ? (gd.items || []).map((g) => '<label class="acts" data-namaguru="' + esc(String(g.nama).toLowerCase()) + '" style="gap:8px;font-weight:500;border-bottom:1px solid var(--bd);padding:7px 0"><input type="checkbox" class="fsGuruPilih" value="' + g.id + '" style="width:auto;height:auto" ' + (terpilih.has(g.id) ? "checked" : "") + '><span><b>' + esc(g.nama) + "</b>" + (g.nip ? ' <span class="mu">NIP. ' + esc(g.nip) + "</span>" : "") + '<br><small class="mu">' + esc([g.jabatan, g.kategori].filter(Boolean).join(" - ")) + "</small></span></label>").join("") : '<span class="mu">Belum ada data guru aktif. Tambah dulu lewat menu Data Guru.</span>';
-    } catch (e) { listGuru.innerHTML = '<span class="er">Data guru gagal dimuat.</span>'; }
-    try {
-      const ag = await api("/api/agenda?jenis=masuk");
-      selInduk.innerHTML = '<option value="">- Tidak ada -</option>' + (ag.items || []).map((m) => '<option value="' + m.id + '" ' + (s && s.induk_id === m.id ? "selected" : "") + ">" + esc((m.nomor_agenda || m.nomor_surat) + " - " + m.perihal) + "</option>").join("");
-    } catch (e) {}
-    const cari = $("#fsGuruCari"); if (cari) cari.oninput = () => { const k = cari.value.toLowerCase(); $$("#fsGuruList [data-namaguru]").forEach((el) => (el.style.display = el.dataset.namaguru.includes(k) ? "" : "none")); };
+    const cariGuru = $("#fsGuruCari"), pickGuru = $("#fsGuruPick"), chipGuru = $("#fsGuruChip");
+    const cariInduk = $("#fsIndukCari"), pickInduk = $("#fsIndukPick"), pilihInduk = $("#fsIndukPilih");
+    if (!cariGuru || !pickGuru || !cariInduk || !pickInduk) return;
+    const gambarChipGuru = () => {
+      chipGuru.innerHTML = [...guruPilih.values()].map((g) => '<span class="chip">' + esc(g.nama) + (g.jabatan ? ' <small>' + esc(g.jabatan) + '</small>' : "") + '<button type="button" data-lepas-guru="' + g.id + '" aria-label="Hapus ' + esc(g.nama) + '"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></button></span>').join("");
+    };
+    chipGuru.onclick = (e) => { const b = e.target.closest("[data-lepas-guru]"); if (!b) return; guruPilih.delete(parseInt(b.dataset.lepasGuru, 10)); gambarChipGuru(); };
+    ((detEdit && detEdit.guru_ditugaskan) || []).forEach((g) => guruPilih.set(g.guru_id, { id: g.guru_id, nama: g.nama, nip: g.nip || null, jabatan: null }));
+    gambarChipGuru();
+    window._guruDimuat = true;
+    let guruTerakhir = new Map(), reqGuru = 0, tGuru = null;
+    const cariGuruJalan = async () => {
+      const k = cariGuru.value.trim(); const n = ++reqGuru;
+      let items = [], total = 0;
+      try { const d = await api("/api/guru?aktif=1" + (k ? "&q=" + encodeURIComponent(k) : "")); items = (d.items || []).slice(0, 10); total = (d.items || []).length; } catch (e) { items = []; }
+      if (n !== reqGuru) return;
+      const sisa = items.filter((g) => !guruPilih.has(g.id));
+      guruTerakhir = new Map(sisa.map((g) => [g.id, g]));
+      pickGuru.innerHTML = sisa.length ? '<div class="pick-list">' + sisa.map((g) => '<button type="button" data-pilih-guru="' + g.id + '"><b>' + esc(g.nama) + '</b><small>' + esc([g.jabatan, g.kategori].filter(Boolean).join(" - ") || (g.nip ? "NIP. " + g.nip : "")) + '</small></button>').join("") + (total > 10 ? '<div class="habis">Menampilkan 10 hasil teratas - ketik untuk mempersempit.</div>' : "") + '</div>' : '<div class="pick-list"><div class="habis">' + (k ? "Tidak ada guru yang cocok." : "Belum ada data guru aktif. Tambah dulu lewat menu Data Guru.") + '</div></div>';
+    };
+    cariGuru.oninput = () => { clearTimeout(tGuru); tGuru = setTimeout(cariGuruJalan, 250); };
+    cariGuru.onfocus = () => { if (!pickGuru.querySelector(".pick-list")) cariGuruJalan(); };
+    pickGuru.onclick = (e) => {
+      const b = e.target.closest("[data-pilih-guru]"); if (!b) return;
+      const g = guruTerakhir.get(parseInt(b.dataset.pilihGuru, 10)); if (!g) return;
+      guruPilih.set(g.id, { id: g.id, nama: g.nama, nip: g.nip || null, jabatan: g.jabatan || null });
+      gambarChipGuru(); pickGuru.innerHTML = ""; cariGuru.value = ""; cariGuru.focus();
+    };
+    const gambarInduk = () => {
+      pilihInduk.innerHTML = indukPilih ? '<div class="pilih-satu"><div><b>Agenda Masuk ' + esc(indukPilih.nomor_agenda || "") + ' - ' + esc(indukPilih.perihal) + '</b><small>' + esc(indukPilih.nomor_surat) + ' - ' + fmtTgl(indukPilih.tanggal_agenda || indukPilih.tanggal_surat) + '</small></div><button type="button" class="x" id="bLepasInduk" aria-label="Hapus pilihan surat">&#215;</button></div>' : "";
+    };
+    if (detEdit && detEdit.induk) indukPilih = detEdit.induk;
+    gambarInduk();
+    pilihInduk.onclick = (e) => { if (!e.target.closest("#bLepasInduk")) return; indukPilih = null; gambarInduk(); cariInduk.focus(); };
+    let indukTerakhir = new Map(), reqInduk = 0, tInduk = null;
+    const cariIndukJalan = async () => {
+      const k = cariInduk.value.trim(); const n = ++reqInduk;
+      if (k.length < 2) { pickInduk.innerHTML = '<div class="pick-list"><div class="habis">Ketik minimal 2 huruf untuk mencari.</div></div>'; return; }
+      let d = null;
+      try { d = await api("/api/surat?jenis=masuk&q=" + encodeURIComponent(k)); } catch (e) { d = null; }
+      if (n !== reqInduk) return;
+      const items = ((d && d.items) || []).slice(0, 10);
+      indukTerakhir = new Map(items.map((r) => [r.id, r]));
+      pickInduk.innerHTML = items.length ? '<div class="pick-list">' + items.map((r) => '<button type="button" data-pilih-induk="' + r.id + '"><b>Agenda Masuk ' + esc(r.nomor_agenda || "") + ' - ' + esc(r.perihal) + '</b><small>' + esc(r.nomor_surat) + ' - ' + fmtTgl(r.tanggal_agenda) + '</small></button>').join("") + ((d.total || 0) > 10 ? '<div class="habis">Menampilkan 10 dari ' + d.total + ' hasil - ketik untuk mempersempit.</div>' : "") + '</div>' : '<div class="pick-list"><div class="habis">Tidak ada surat masuk yang cocok.</div></div>';
+    };
+    cariInduk.oninput = () => { clearTimeout(tInduk); tInduk = setTimeout(cariIndukJalan, 250); };
+    cariInduk.onfocus = () => { if (cariInduk.value.trim().length >= 2 && !pickInduk.querySelector(".pick-list")) cariIndukJalan(); };
+    pickInduk.onclick = (e) => {
+      const b = e.target.closest("[data-pilih-induk]"); if (!b) return;
+      const r = indukTerakhir.get(parseInt(b.dataset.pilihInduk, 10)); if (!r) return;
+      indukPilih = r; gambarInduk(); pickInduk.innerHTML = ""; cariInduk.value = "";
+    };
+    if (!window._pickTerpasang) { window._pickTerpasang = true; document.addEventListener("click", (e) => { if (!e.target.closest(".pick") && !e.target.closest("#fsGuruCari") && !e.target.closest("#fsIndukCari")) $$(".pick-list").forEach((el) => el.remove()); }); }
   }
   muatOpsiPenugasan();
   const batal = () => (s ? go("detail", s.id) : go($("#fsJenis").value));
@@ -589,7 +629,7 @@ async function viewForm(arg) {
   $("#formSurat").onsubmit = async (e) => {
     e.preventDefault();
     const btn = $("#fsSimpan"); btn.disabled = true; btn.innerHTML = '<span class="spin"></span><span>Menyimpan...</span>';
-    const payload = { jenis: $("#fsJenis").value, nomor_surat: $("#fsNomor").value.trim(), tanggal_surat: $("#fsTglSurat").value, tanggal_agenda: $("#fsTglAgenda").value, asal: $("#fsAsal").value.trim() || null, tujuan: $("#fsTujuan").value.trim() || null, perihal: $("#fsPerihal").value.trim(), ringkasan: $("#fsRingkasan").value.trim() || null, keterangan: $("#fsKet").value.trim() || null, klasifikasi: $("#fsKlas").value || null, sifat: $("#fsSifat").value, lokasi_fisik: $("#fsLokasi").value.trim() || null, penandatangan: $("#fsTtd").value.trim() || null, jenis_penugasan: $("#fsJenis").value === "keluar" && $("#fsPenugasan") ? ($("#fsPenugasan").value || null) : null, induk_id: $("#fsJenis").value === "keluar" && $("#fsInduk") ? ($("#fsInduk").value ? parseInt($("#fsInduk").value, 10) : null) : null, guru_ids: $("#fsJenis").value === "keluar" && window._guruDimuat ? $$(".fsGuruPilih").filter((c) => c.checked).map((c) => parseInt(c.value, 10)) : undefined };
+    const payload = { jenis: $("#fsJenis").value, nomor_surat: $("#fsNomor").value.trim(), tanggal_surat: $("#fsTglSurat").value, tanggal_agenda: $("#fsTglAgenda").value, asal: $("#fsAsal").value.trim() || null, tujuan: $("#fsTujuan").value.trim() || null, perihal: $("#fsPerihal").value.trim(), ringkasan: $("#fsRingkasan").value.trim() || null, keterangan: $("#fsKet").value.trim() || null, klasifikasi: $("#fsKlas").value || null, sifat: $("#fsSifat").value, lokasi_fisik: $("#fsLokasi").value.trim() || null, penandatangan: $("#fsTtd").value.trim() || null, jenis_penugasan: $("#fsJenis").value === "keluar" && $("#fsPenugasan") ? ($("#fsPenugasan").value || null) : null, induk_id: $("#fsJenis").value === "keluar" ? (indukPilih ? indukPilih.id : null) : null, guru_ids: $("#fsJenis").value === "keluar" && window._guruDimuat ? [...guruPilih.keys()] : undefined };
     try {
       if (id) { await api("/api/surat/" + id, { method: "PUT", body: JSON.stringify(payload) }); let g2 = 0; for (const f of formFiles) { const fd = new FormData(); fd.append("file", f); fd.append("jenis_berkas", "berkas_surat"); try { const rr = await fetch("/api/surat/" + id + "/lampiran", { method: "POST", body: fd }); if (!rr.ok) g2++; } catch (er) { g2++; } } toast(g2 ? "Perubahan tersimpan, " + g2 + " berkas gagal diunggah" : "Perubahan surat tersimpan", g2 > 0); go("detail", id); return; }
       const r = await api("/api/surat", { method: "POST", body: JSON.stringify(payload) });
