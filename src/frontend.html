@@ -158,6 +158,28 @@ const MENU = [
   ["ADMINISTRASI", [["guru", "Data Guru", "users"], ["sampah", "Tempat Sampah", "trash"], ["pengaturan", "Pengaturan", "settings"]]],
 ];
 const JUDUL = { beranda: "Beranda", masuk: "Surat Masuk", keluar: "Surat Keluar", detail: "Detail Surat", disposisi: "Disposisi", form: "Tambah Surat", agenda: "Buku Agenda", rekap: "Rekap Tahunan", sampah: "Tempat Sampah", pengaturan: "Pengaturan", audit: "Audit", cari: "Pencarian", guru: "Data Guru" };
+/* ---------- P11 flyout rel ikon tablet ---------- */
+const FLYOUT_MENU = {
+  masuk: { judul: "Surat Masuk", tautan: [["Daftar Surat Masuk", () => go("masuk")], ["Tambah Surat Masuk", () => go("form", { jenis: "masuk" })], ["Berkas Belum Lengkap", () => keTanpaScan("masuk")]] },
+  keluar: { judul: "Surat Keluar", tautan: [["Daftar Surat Keluar", () => go("keluar")], ["Tambah Surat Keluar", () => go("form", { jenis: "keluar" })], ["Berkas Belum Lengkap", () => keTanpaScan("keluar")]] },
+};
+function keTanpaScan(jenis) { if (!listState[jenis]) listState[jenis] = listStateBaru(jenis); listState[jenis].tanpa_scan = true; listState[jenis].page = 1; go(jenis); }
+function diTablet() { return window.matchMedia("(min-width:721px) and (max-width:1024px)").matches; }
+function ambilFlyout() { let f = document.getElementById("flyout"); if (!f) { f = document.createElement("div"); f.id = "flyout"; f.className = "flyout"; f.setAttribute("role", "dialog"); f.hidden = true; document.body.appendChild(f); } return f; }
+function tutupFlyout() { const f = document.getElementById("flyout"); if (f) f.hidden = true; $$("#sb .nv[aria-expanded]").forEach((b) => b.setAttribute("aria-expanded", "false")); }
+function bukaFlyout(kunci, tombol) {
+  const f = ambilFlyout(); const cfg = FLYOUT_MENU[kunci]; if (!cfg) return;
+  f.setAttribute("aria-label", "Menu " + cfg.judul);
+  f.innerHTML = '<div class="flyout-title">' + esc(cfg.judul) + '</div>' + cfg.tautan.map((t, i) => '<a href="#" data-fly="' + i + '">' + esc(t[0]) + '</a>').join("");
+  f.hidden = false;
+  const r = tombol.getBoundingClientRect();
+  let atas = r.top; const tinggi = f.offsetHeight;
+  if (atas + tinggi > window.innerHeight - 12) atas = Math.max(12, window.innerHeight - 12 - tinggi);
+  f.style.left = (r.right + 8) + "px"; f.style.top = atas + "px";
+  f.style.setProperty("--panah", Math.max(8, Math.min(tinggi - 18, r.top + r.height / 2 - atas)) + "px");
+  $$("#sb .nv[aria-expanded]").forEach((b) => b.setAttribute("aria-expanded", b === tombol ? "true" : "false"));
+  f.querySelectorAll("[data-fly]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); tutupFlyout(); cfg.tautan[parseInt(a.dataset.fly, 10)][1](); }));
+}
 function renderShell() {
   let h = '<div class="br"><div class="bm">' + ic("letterhead") + '</div><div class="bt"><b>E-Arsip</b><small class="nl">' + esc(namaInstansi()) + "</small></div></div>";
   h += '<nav class="sn">';
@@ -167,10 +189,22 @@ function renderShell() {
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.4.9</div></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.5.0</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
-  $$("#sb [data-go]").forEach((b) => (b.onclick = () => go(b.dataset.go)));
+  $$("#sb [data-go]").forEach((b) => {
+    if (FLYOUT_MENU[b.dataset.go]) { b.setAttribute("aria-expanded", "false"); b.setAttribute("aria-controls", "flyout"); }
+    b.onclick = () => {
+      if (diTablet() && FLYOUT_MENU[b.dataset.go]) { const f = document.getElementById("flyout"); if (f && !f.hidden && b.getAttribute("aria-expanded") === "true") { tutupFlyout(); return; } bukaFlyout(b.dataset.go, b); return; }
+      tutupFlyout(); go(b.dataset.go);
+    };
+  });
+  if (!window._flyoutTerpasang) {
+    window._flyoutTerpasang = true;
+    document.addEventListener("click", (e) => { const f = document.getElementById("flyout"); if (f && !f.hidden && !f.contains(e.target) && !e.target.closest("#sb .nv")) tutupFlyout(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") tutupFlyout(); });
+    window.addEventListener("resize", tutupFlyout);
+  }
   $("#btnKeluar").onclick = () => konfirmasi("Keluar dari E-Arsip?", "Sesi Anda akan diakhiri. Anda perlu masuk lagi untuk melanjutkan pekerjaan.", "Keluar", keluar);
   $("#ovl").onclick = () => document.body.classList.remove("nav");
   segarLencana();
@@ -199,6 +233,7 @@ function renderTop() {
   $("#gCari").onsubmit = (e) => { e.preventDefault(); const q = $("#gQ").value.trim(); if (q) go("cari", { q }); };
 }
 function go(p, arg) {
+  tutupFlyout();
   cur = { p, arg };
   const RUTE = ["beranda", "masuk", "keluar", "disposisi", "agenda", "rekap", "sampah", "pengaturan", "audit", "guru", "detail", "cari"];
   if (RUTE.includes(p)) { let h = "#/" + p; if (p === "detail" && arg != null) h += "/" + encodeURIComponent(arg); if (p === "cari" && arg && arg.q) h += "/" + encodeURIComponent(arg.q); try { history.replaceState(null, "", h); } catch (e) {} }
@@ -362,6 +397,7 @@ async function hapusMassal(jenis) {
 }
 
 /* ---------- detail surat ---------- */
+function riwayatSurat(s, disposisi, lampiran) { const ev = []; if (s.dibuat_pada) ev.push({ w: s.dibuat_pada, j: "Surat dicatat ke agenda " + (s.jenis === "masuk" ? "masuk" : "keluar") + (s.nomor_agenda ? " " + s.nomor_agenda : "") }); (disposisi || []).forEach((x) => { if (x.dibuat_pada) ev.push({ w: x.dibuat_pada, j: "Disposisi dibuat untuk " + (x.kepada || "-") }); if (x.selesai_pada) ev.push({ w: x.selesai_pada, j: "Disposisi untuk " + (x.kepada || "-") + " diselesaikan" }); }); (lampiran || []).forEach((l) => { if (l.diupload_pada) ev.push({ w: l.diupload_pada, j: "Berkas diunggah: " + (l.nama_asli || "-") }); }); ev.sort((a, b) => String(a.w).localeCompare(String(b.w))); if (!ev.length) return '<p class="mu">Belum ada riwayat.</p>'; return '<ul class="tl">' + ev.map((e) => '<li><b>' + esc(e.j) + '</b><small>' + fmtJam(e.w) + '</small></li>').join("") + '</ul>'; }
 async function viewDetail(id) {
   $("#main").innerHTML = headPage("Detail Surat", "Memuat...") + '<div class="card cb">' + rangka(6) + "</div>";
   let d; try { d = await api("/api/surat/" + id); } catch (e) { $("#main").innerHTML = headPage("Detail Surat", "") + '<div class="card cb er">' + esc(e.message) + "</div>"; return; }
@@ -390,39 +426,45 @@ async function viewDetail(id) {
   let lampPend = berkasPendukung.length ? '<ul class="fi2">' + berkasPendukung.map((l) => barisBerkas(l, true)).join("") + "</ul>" : '<p class="mu">Belum ada lampiran pendukung.</p>';
   let penugasanHtml = "";
   if (s.jenis === "keluar" && (s.jenis_penugasan || d.induk || (d.guru_ditugaskan || []).length)) {
-    penugasanHtml = '<div class="card mt"><div class="ch"><h2>Penugasan</h2>' + (s.jenis_penugasan ? '<span class="bd in">' + esc(s.jenis_penugasan) + "</span>" : "") + '</div><div class="cb">'
+    penugasanHtml = '<div style="border-top:1px solid var(--bd);margin-top:14px;padding-top:14px"><h3 class="sh">Penugasan</h3>' + (s.jenis_penugasan ? '<span class="bd in">' + esc(s.jenis_penugasan) + "</span>" : "")
       + (d.induk ? '<p style="margin-bottom:12px">Menindaklanjuti surat masuk <b>' + esc(d.induk.nomor_agenda || d.induk.nomor_surat) + "</b> - " + esc(d.induk.perihal) + ' <button class="btn sec sm" id="bKeInduk">Lihat Surat Masuk</button></p>' : "")
       + "<b>Guru / Staff yang Ditugaskan</b>"
       + ((d.guru_ditugaskan || []).length ? '<ul class="fi2" style="margin-top:8px">' + d.guru_ditugaskan.map((g) => '<li><span class="fic in">' + ic("users") + '</span><div><b>' + esc(g.nama) + "</b><small>" + (g.nip ? "NIP. " + esc(g.nip) : "Tanpa NIP") + "</small></div></li>").join("") + "</ul>" : '<p class="mu" style="margin-top:6px">Belum ada guru yang ditugaskan pada surat ini.</p>')
-      + "</div></div>";
+      + "</div>";
   }
   let turunanHtml = "";
   if (s.jenis === "masuk" && (d.turunan || []).length) {
-    turunanHtml = '<div class="card mt"><div class="ch"><h2>Surat Keluar Terkait</h2></div><div class="cb"><ul class="fi2">'
+    turunanHtml = '<div style="border-top:1px solid var(--bd);margin-top:14px;padding-top:14px"><h3 class="sh">Surat Keluar Terkait</h3><ul class="fi2">'
       + d.turunan.map((t) => '<li><span class="fic in">' + ic("outbox") + '</span><div><b>' + esc(t.jenis_penugasan || "Surat Keluar") + "</b><small>" + esc(t.nomor_surat) + " - " + fmtTgl(t.tanggal_agenda) + " - " + esc(t.perihal) + '</small></div><span class="acts"><button class="btn sec sm" data-turunan="' + t.id + '">Detail</button></span></li>').join("")
-      + "</ul></div></div>";
+      + "</ul></div>";
   }
   let disp = "";
   if (s.jenis === "masuk") {
-    disp = '<div class="card mt"><div class="ch"><h2>Disposisi</h2></div><div class="cb">'
+    disp = '<div class="card mt"><div class="ch"><h2>3. Disposisi</h2></div><div class="cb">'
       + (d.disposisi.length ? '<ul class="tl" id="tl">' + d.disposisi.map((x) => '<li style="--fg:' + (x.status === "Selesai" ? "#0B6A4F" : terlambatDisp(x) ? "#C53838" : "#A96100") + '"><b>Disposisi ke ' + esc(x.kepada) + "</b> - " + badgeStatus(terlambatDisp(x) ? "Terlambat" : (x.status === "Baru" ? "Belum" : x.status)) + "<small>" + esc(x.instruksi || "") + (x.batas_waktu ? " - Batas: " + fmtTgl(x.batas_waktu) + (() => { const tg = x.status !== "Selesai" ? labelTenggat(x.batas_waktu) : null; return tg ? " (" + tg.t + ")" : ""; })() : "") + " - " + fmtTgl(x.dibuat_pada) + '</small><span class="acts" style="margin-top:6px">' + (x.status !== "Selesai" ? '<button class="btn sec sm" data-disp-proses="' + x.id + '">' + ic("clock") + "Proses</button>" : "") + (x.status !== "Selesai" ? '<button class="btn sec sm" data-disp-selesai="' + x.id + '">' + ic("check") + "Tandai Selesai</button>" : "") + "</span></li>").join("") + "</ul>" : '<p class="mu" style="margin-bottom:14px">Belum ada disposisi untuk surat ini.</p>')
-      + '<form id="formDisp" style="border-top:1px solid var(--bd);padding-top:16px"><div class="fg"><div class="fl"><label>Diteruskan Kepada <span class="rq">Wajib diisi</span></label><input id="diKepada" required placeholder="Nama atau jabatan penerima" list="dlGuru"><datalist id="dlGuru"></datalist></div><div class="fl"><label>Batas Waktu</label><input id="diBatas" type="date"></div><div class="fl w"><label>Instruksi</label><textarea id="diInstruksi" placeholder="Isi instruksi disposisi"></textarea></div></div><button class="btn" type="submit">' + ic("send") + "Kirim Disposisi</button></form>"
+      + '<form id="formDisp" style="border-top:1px solid var(--bd);padding-top:16px"><div class="fg"><div class="fl"><label>Diteruskan Kepada <span class="rq2">*</span></label><input id="diKepada" required placeholder="Nama atau jabatan penerima" list="dlGuru"><datalist id="dlGuru"></datalist></div><div class="fl"><label>Batas Waktu</label><input id="diBatas" type="date"></div><div class="fl w"><label>Instruksi</label><textarea id="diInstruksi" placeholder="Isi instruksi disposisi"></textarea></div></div><button class="btn" type="submit">' + ic("send") + "Kirim Disposisi</button></form>"
       + "</div></div>";
   }
   $("#main").innerHTML = headPage(s.nomor_surat, (s.jenis === "masuk" ? "Surat Masuk" : "Surat Keluar") + " - Agenda " + (s.nomor_agenda || "-"),
     '<button class="btn sec" id="bKembali">' + ic("back") + "Kembali</button>"
     + (bisaUbah ? '<button class="btn sec" id="bUbah">' + ic("edit") + "Ubah</button>" : "")
+    + ((s.jenis === "masuk" && bisaUbah) ? '<button class="btn sec" id="bTambahDisp">' + ic("send") + "Tambah Disposisi</button>" : "")
     + (bisaUbah ? '<button class="btn dgo" id="bSampah">' + ic("trash") + "Pindah ke Sampah</button>" : "")
     + (s.jenis === "masuk" ? '<a class="btn sec" href="/cetak/disposisi/' + s.id + '" target="_blank">' + ic("print") + "Cetak Lembar Disposisi</a>" : ""))
-    + '<div class="g2"><div class="col"><div class="card"><div class="ch"><h2>Pratinjau Berkas</h2>' + badgeSifat(s.sifat) + '</div><div class="cb">' + (pertama ? '<div class="pvbar"><span class="pvname">' + esc(pertama.nama_asli) + '</span><span class="acts"><a class="btn sec sm" href="/api/lampiran/' + pertama.id + '/file" target="_blank" rel="noopener">' + ic("eye") + 'Buka</a><a class="btn sec sm" href="/api/lampiran/' + pertama.id + '/file?dl=1">' + ic("download") + 'Unduh</a></span></div>' : "") + '<div class="pv" style="padding:0;background:none">' + preview + "</div></div></div>"
-    + '<div class="card"><div class="ch"><h2>Berkas Surat</h2><span class="bd gr">' + berkasUtama.length + " / 5 berkas</span></div><div class=\"cb\">" + lamp
-    + (bisaUbah ? '<button class="dz" id="bUpload"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Unggah Berkas Surat</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas" + (r2Aktif ? "" : " - upload belum aktif") + "</span></button>" : "") + "</div></div>"
-    + (s.jenis === "keluar" ? '<div class="card"><div class="ch"><h2>Lampiran Pendukung</h2><span class="bd gr">' + berkasPendukung.length + ' berkas</span></div><div class="cb">' + lampPend + '<p class="mu" style="margin:10px 0">Bukti kegiatan dari surat ini, misalnya foto kegiatan dan daftar hadir. Gunakan nama berkas yang jelas, contoh: Daftar Hadir - Rapat Wali Murid.pdf</p>' + (bisaUbah ? '<button class="dz" id="bUploadPendukung"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Tambah Lampiran Pendukung</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas" + (r2Aktif ? "" : " - upload belum aktif") + "</span></button>" : "") + "</div></div>" : "")
-    + "</div>"
-    + '<div class="col"><div class="card"><div class="ch"><h2>Data Surat</h2>' + (s.jenis === "masuk" ? badgeStatus(s.status_disposisi) : '<span class="bd ok">Terkirim</span>') + '</div><div class="cb"><dl class="dl">'
-    + baris.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").join("") + "</dl></div></div>" + penugasanHtml + turunanHtml + disp + "</div></div>";
+    + '<div class="card"><div class="ch"><h2>1. Informasi</h2>' + (s.jenis === "masuk" ? badgeStatus(s.status_disposisi) : '<span class="bd ok">Terkirim</span>') + '</div><div class="cb"><dl class="dl">'
+    + baris.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").join("") + "</dl>" + penugasanHtml + turunanHtml + "</div></div>"
+    + '<div class="card mt"><div class="ch"><h2>2. Berkas</h2>' + badgeSifat(s.sifat) + '<span class="bd gr">' + berkasUtama.length + " / 5 berkas</span></div><div class=\"cb\">"
+    + (pertama ? '<div class="pvbar"><span class="pvname">' + esc(pertama.nama_asli) + '</span><span class="acts"><a class="btn sec sm" href="/api/lampiran/' + pertama.id + '/file" target="_blank" rel="noopener">' + ic("eye") + 'Buka</a><a class="btn sec sm" href="/api/lampiran/' + pertama.id + '/file?dl=1">' + ic("download") + 'Unduh</a></span></div>' : "")
+    + '<div class="pv" style="padding:0;background:none">' + preview + "</div>"
+    + '<h3 class="sh" style="margin-top:16px">Berkas Surat</h3>' + lamp
+    + (bisaUbah ? '<button class="dz" id="bUpload"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Unggah Berkas Surat</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas" + (r2Aktif ? "" : " - upload belum aktif") + "</span></button>" : "")
+    + (s.jenis === "keluar" ? '<h3 class="sh" style="margin-top:16px">Lampiran Pendukung</h3>' + lampPend + '<p class="mu" style="margin:10px 0">Bukti kegiatan dari surat ini, misalnya foto kegiatan dan daftar hadir. Gunakan nama berkas yang jelas, contoh: Daftar Hadir - Rapat Wali Murid.pdf</p>' + (bisaUbah ? '<button class="dz" id="bUploadPendukung"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Tambah Lampiran Pendukung</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas" + (r2Aktif ? "" : " - upload belum aktif") + "</span></button>" : "") : "")
+    + "</div></div>"
+    + disp
+    + '<div class="card mt"><div class="ch"><h2>4. Riwayat</h2></div><div class="cb">' + riwayatSurat(s, d.disposisi, d.lampiran) + "</div></div>";
   $("#bKembali").onclick = () => go(s.jenis);
   const bu = $("#bUbah"); if (bu) bu.onclick = () => go("form", { id: s.id });
+  const btd = $("#bTambahDisp"); if (btd) btd.onclick = () => { const f = $("#formDisp"); if (f) { f.scrollIntoView({ behavior: "smooth", block: "center" }); const k = $("#diKepada"); if (k) k.focus({ preventScroll: true }); } };
   const bs = $("#bSampah"); if (bs) bs.onclick = () => konfirmasi("Pindah ke Sampah?", "Surat <b>" + esc(s.nomor_surat) + "</b> akan dipindah ke Tempat Sampah dan bisa dipulihkan dalam 30 hari.", "Pindah ke Sampah", async () => { try { await api("/api/surat/" + s.id, { method: "DELETE" }); const jns = s.jenis, sid = s.id; go(jns); toastAksi("Surat dipindahkan ke Tempat Sampah", "Batalkan", async () => { await api("/api/surat/" + sid + "/pulih", { method: "POST" }); toast("Surat dipulihkan"); muatList(jns); }); } catch (e) { toast(e.message, true); } });
   const up = $("#bUpload"); if (up) up.onclick = () => $("#fileLampiran").click();
   $("#fileLampiran").onchange = async (e) => {
@@ -488,28 +530,28 @@ async function viewForm(arg) {
   $("#main").innerHTML = headPage(id ? "Ubah Surat" : "Tambah Surat", id ? "Perubahan tersimpan sebagai data surat yang sama" : "Isi data surat, berkas bisa diunggah langsung atau menyusul",
     '<button class="btn sec" id="bBatal">' + ic("back") + "Batal</button>")
     + '<form id="formSurat"><div class="steps"><div class="sp on"><i>1</i>Data Surat</div><div class="sp"><i>2</i>Berkas Surat</div><div class="sp"><i>3</i>Simpan</div></div>'
-    + '<div class="card"><div class="fs"><h3>Identitas Surat</h3><div class="fg">'
+    + '<p class="mu" style="margin:2px 2px 12px">Tanda <span class="rq2">*</span> wajib diisi.</p><div class="card"><div class="fs"><h3>Identitas Surat</h3><div class="fg">'
     + '<div class="fl"><label>Jenis Surat</label><select id="fsJenis"' + (id ? " disabled" : "") + '>' + ["masuk", "keluar"].map((j) => '<option value="' + j + '" ' + (jenis === j ? "selected" : "") + ">" + (j === "masuk" ? "Surat Masuk" : "Surat Keluar") + "</option>").join("") + "</select></div>"
     + (s ? '<div class="fl"><label>Nomor Agenda</label><input value="' + esc(s.nomor_agenda || "-") + '" readonly></div>' : "")
-    + '<div class="fl"><label>Nomor Surat <span class="rq">Wajib diisi</span></label><input id="fsNomor" required value="' + esc(s ? s.nomor_surat : "") + '" placeholder="Contoh: 421.2/118/Kk.12/2025"><small class="mu">Salin persis sesuai dokumen asli.</small></div>'
-    + '<div class="fl"><label>Tanggal Surat <span class="rq">Wajib diisi</span></label><input id="fsTglSurat" type="date" required value="' + esc(s ? s.tanggal_surat : todayStr()) + '"><small class="mu">Tanggal yang tertulis pada dokumen.</small></div>'
-    + '<div class="fl"><label>Tanggal Agenda / Terima <span class="rq">Wajib diisi</span></label><input id="fsTglAgenda" type="date" required value="' + esc(s ? s.tanggal_agenda : todayStr()) + '"><small class="mu">Tanggal surat dicatat oleh TU. Nomor agenda mengikuti tanggal ini.</small></div>'
+    + '<div class="fl"><label>Nomor Surat <span class="rq2">*</span></label><input id="fsNomor" required value="' + esc(s ? s.nomor_surat : "") + '" placeholder="Contoh: 421.2/118/Kk.12/2025"><small class="mu">Salin persis sesuai dokumen asli.</small></div>'
+    + '<div class="fl"><label>Tanggal Surat <span class="rq2">*</span></label><input id="fsTglSurat" type="date" required value="' + esc(s ? s.tanggal_surat : todayStr()) + '"><small class="mu">Tanggal yang tertulis pada dokumen.</small></div>'
+    + '<div class="fl"><label>Tanggal Agenda / Terima <span class="rq2">*</span></label><input id="fsTglAgenda" type="date" required value="' + esc(s ? s.tanggal_agenda : todayStr()) + '"><small class="mu">Tanggal surat dicatat oleh TU. Nomor agenda mengikuti tanggal ini.</small></div>'
     + '<div class="fl" id="wrapAsal"><label>Asal Surat <span class="rq">untuk surat masuk</span></label><input id="fsAsal" value="' + esc(s ? s.asal || "" : "") + '" placeholder="Instansi pengirim"></div>'
     + '<div class="fl" id="wrapTujuan"><label>Tujuan Surat <span class="rq">untuk surat keluar</span></label><input id="fsTujuan" value="' + esc(s ? s.tujuan || "" : "") + '" placeholder="Instansi tujuan"></div>'
-    + '<div class="fl w"><label>Perihal <span class="rq">Wajib diisi</span></label><input id="fsPerihal" required value="' + esc(s ? s.perihal : "") + '" placeholder="Inti isi surat dalam satu kalimat"></div>'
+    + '<div class="fl w"><label>Perihal <span class="rq2">*</span></label><input id="fsPerihal" required value="' + esc(s ? s.perihal : "") + '" placeholder="Inti isi surat dalam satu kalimat"></div>'
     + '<div class="fl w"><label>Ringkasan Isi</label><textarea id="fsRingkasan" placeholder="Tulis pokok isi surat, bukan seluruh isi surat">' + esc(s ? s.ringkasan || "" : "") + "</textarea></div>"
     + '</div></div><div class="fs"><h3>Klasifikasi dan Penempatan</h3><div class="fg">'
     + '<div class="fl"><label>Klasifikasi</label><select id="fsKlas">' + klasOpts + "</select></div>"
     + '<div class="fl"><label>Sifat Surat</label><select id="fsSifat">' + ["Biasa", "Penting", "Segera", "Rahasia"].map((x) => "<option " + (s && s.sifat === x ? "selected" : "") + ">" + x + "</option>").join("") + "</select></div>"
     + '<div class="fl"><label>Lokasi Arsip Fisik</label><input id="fsLokasi" value="' + esc(s ? s.lokasi_fisik || "" : "") + '" placeholder="Contoh: Lemari 2, map kuning"></div>'
-    + '<div class="fl" id="wrapTtd"><label>Penandatangan <span class="rq">surat keluar</span></label><input id="fsTtd" value="' + esc(s ? s.penandatangan || "" : "") + '" placeholder="Nama penandatangan surat"></div>'
+    + '<div class="fl" id="wrapTtd"><label>Penandatangan <span class="rq">untuk surat keluar</span></label><input id="fsTtd" value="' + esc(s ? s.penandatangan || "" : "") + '" placeholder="Nama penandatangan surat"></div>'
     + '</div></div><div class="fs" id="wrapPenugasan"><h3>Penugasan - Surat Tugas dan SPPD</h3><div class="fg">'
     + '<div class="fl"><label>Jenis Penugasan</label><select id="fsPenugasan"><option value="">Bukan surat penugasan</option>' + ["Surat Tugas", "SPPD"].map((x) => '<option ' + (s && s.jenis_penugasan === x ? "selected" : "") + ">" + x + "</option>").join("") + '</select><small class="mu">Pilih bila surat keluar ini adalah Surat Tugas atau Surat Perjalanan Dinas.</small></div>'
     + '<div class="fl"><label>Menindaklanjuti Surat Masuk</label><select id="fsInduk"><option value="">- Tidak ada -</option></select><small class="mu">Pilih undangan atau surat masuk yang ditindaklanjuti, bila ada.</small></div>'
     + '<div class="fl w"><label>Guru / Staff yang Ditugaskan</label><div class="sr" style="margin-bottom:8px">' + ic("search") + '<input id="fsGuruCari" placeholder="Cari nama guru atau staff..."></div><div id="fsGuruList"><span class="mu">Memuat data guru...</span></div></div>'
     + '</div></div><div class="fs"><h3>Berkas Surat</h3>'
     + '<button type="button" class="dz" id="fsDrop"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Pilih berkas surat</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas, maks 5 berkas" + (r2Aktif ? "" : " - upload belum aktif") + '</span></button><ul class="fi2" id="fsFileList"></ul><p class="mu" style="margin-top:8px">Berkas dapat dilengkapi menyusul dari halaman Detail. Lampiran pendukung surat keluar (foto kegiatan, daftar hadir) juga ditambahkan dari halaman Detail.</p>'
-    + '</div><div class="cb" style="border-top:1px solid var(--bd)"><div class="acts end"><button type="button" class="btn sec" id="bBatal2">Batal</button><button class="btn" type="submit" id="fsSimpan">' + ic("check") + (id ? "Simpan Perubahan" : "Simpan Surat") + "</button></div></div></div></form>";
+    + '</div><div class="fs"><h3>Keterangan</h3><div class="fg"><div class="fl w"><label>Catatan</label><textarea id="fsKet" placeholder="Catatan tambahan tentang surat ini">' + esc(s ? s.keterangan || "" : "") + '</textarea></div></div></div><div class="cb" style="border-top:1px solid var(--bd)"><div class="acts end"><button type="button" class="btn sec" id="bBatal2">Batal</button><button class="btn" type="submit" id="fsSimpan">' + ic("check") + (id ? "Simpan Perubahan" : "Simpan Surat") + "</button></div></div></div></form>";
   const syncJenis = () => { const j = $("#fsJenis").value; $("#wrapAsal").style.display = j === "masuk" ? "" : "none"; $("#wrapTujuan").style.display = j === "keluar" ? "" : "none"; $("#wrapTtd").style.display = j === "keluar" ? "" : "none"; const wp = $("#wrapPenugasan"); if (wp) wp.style.display = j === "keluar" ? "" : "none"; };
   $("#fsJenis").onchange = syncJenis; syncJenis();
   async function muatOpsiPenugasan() {
@@ -544,7 +586,7 @@ async function viewForm(arg) {
   $("#formSurat").onsubmit = async (e) => {
     e.preventDefault();
     const btn = $("#fsSimpan"); btn.disabled = true; btn.innerHTML = '<span class="spin"></span><span>Menyimpan...</span>';
-    const payload = { jenis: $("#fsJenis").value, nomor_surat: $("#fsNomor").value.trim(), tanggal_surat: $("#fsTglSurat").value, tanggal_agenda: $("#fsTglAgenda").value, asal: $("#fsAsal").value.trim() || null, tujuan: $("#fsTujuan").value.trim() || null, perihal: $("#fsPerihal").value.trim(), ringkasan: $("#fsRingkasan").value.trim() || null, klasifikasi: $("#fsKlas").value || null, sifat: $("#fsSifat").value, lokasi_fisik: $("#fsLokasi").value.trim() || null, penandatangan: $("#fsTtd").value.trim() || null, jenis_penugasan: $("#fsJenis").value === "keluar" && $("#fsPenugasan") ? ($("#fsPenugasan").value || null) : null, induk_id: $("#fsJenis").value === "keluar" && $("#fsInduk") ? ($("#fsInduk").value ? parseInt($("#fsInduk").value, 10) : null) : null, guru_ids: $("#fsJenis").value === "keluar" && window._guruDimuat ? $$(".fsGuruPilih").filter((c) => c.checked).map((c) => parseInt(c.value, 10)) : undefined };
+    const payload = { jenis: $("#fsJenis").value, nomor_surat: $("#fsNomor").value.trim(), tanggal_surat: $("#fsTglSurat").value, tanggal_agenda: $("#fsTglAgenda").value, asal: $("#fsAsal").value.trim() || null, tujuan: $("#fsTujuan").value.trim() || null, perihal: $("#fsPerihal").value.trim(), ringkasan: $("#fsRingkasan").value.trim() || null, keterangan: $("#fsKet").value.trim() || null, klasifikasi: $("#fsKlas").value || null, sifat: $("#fsSifat").value, lokasi_fisik: $("#fsLokasi").value.trim() || null, penandatangan: $("#fsTtd").value.trim() || null, jenis_penugasan: $("#fsJenis").value === "keluar" && $("#fsPenugasan") ? ($("#fsPenugasan").value || null) : null, induk_id: $("#fsJenis").value === "keluar" && $("#fsInduk") ? ($("#fsInduk").value ? parseInt($("#fsInduk").value, 10) : null) : null, guru_ids: $("#fsJenis").value === "keluar" && window._guruDimuat ? $$(".fsGuruPilih").filter((c) => c.checked).map((c) => parseInt(c.value, 10)) : undefined };
     try {
       if (id) { await api("/api/surat/" + id, { method: "PUT", body: JSON.stringify(payload) }); let g2 = 0; for (const f of formFiles) { const fd = new FormData(); fd.append("file", f); fd.append("jenis_berkas", "berkas_surat"); try { const rr = await fetch("/api/surat/" + id + "/lampiran", { method: "POST", body: fd }); if (!rr.ok) g2++; } catch (er) { g2++; } } toast(g2 ? "Perubahan tersimpan, " + g2 + " berkas gagal diunggah" : "Perubahan surat tersimpan", g2 > 0); go("detail", id); return; }
       const r = await api("/api/surat", { method: "POST", body: JSON.stringify(payload) });
@@ -598,7 +640,7 @@ async function muatGuru() {
 function dialogGuru(g) {
   const v = (k) => esc(g ? g[k] || "" : "");
   modal('<h2 style="margin-bottom:14px">' + (g ? "Ubah Data Guru / Staff" : "Tambah Guru / Staff") + '</h2><div class="fg">'
-    + '<div class="fl"><label>Nama <span class="rq">Wajib diisi</span></label><input id="grNama" value="' + v("nama") + '" placeholder="Nama lengkap beserta gelar"></div>'
+    + '<div class="fl"><label>Nama <span class="rq2">*</span></label><input id="grNama" value="' + v("nama") + '" placeholder="Nama lengkap beserta gelar"></div>'
     + '<div class="fl"><label>NIP <span class="rq">opsional</span></label><input id="grNip" value="' + v("nip") + '" placeholder="Kosongkan bila belum punya NIP"></div>'
     + '<div class="fl"><label>Pangkat / Golongan</label><input id="grPangkat" value="' + v("pangkat_golongan") + '" placeholder="Contoh: Penata III/c"></div>'
     + '<div class="fl"><label>Jabatan</label><input id="grJabatan" value="' + v("jabatan") + '" placeholder="Contoh: Guru Kelas, Staff Tata Usaha"></div>'
