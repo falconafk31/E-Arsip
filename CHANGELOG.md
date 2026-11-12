@@ -2,6 +2,13 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.4.7] - 2026-11-12
+
+### Diperbaiki
+
+- Hapus massal kini memberi umpan balik seketika: sesudah konfirmasi, tombol berubah menjadi "Menghapus..." yang nonaktif dan muncul toast "Menghapus N surat..." (sebelumnya 25 hapus berurutan tanpa indikator apa pun selama belasan detik, sehingga tampak seperti tidak terjadi apa-apa padahal surat sudah pindah ke Tempat Sampah). Penghapusan kini berjalan paralel berkelompok 5 sehingga jauh lebih cepat, ketuk ganda tidak bisa memulai penghapusan kedua, dan hasilnya tampil sebagai toast aksi "Lihat Sampah" selama 9 detik yang membuka menu Tempat Sampah.
+- Chip saringan tetap tampil bila filter menghasilkan 0 surat (sebelumnya halaman kosong tanpa chip, sehingga filter aktif tidak bisa dibatalkan dari chip).
+
 ## [1.4.6] - 2026-11-12
 
 ### Diubah
