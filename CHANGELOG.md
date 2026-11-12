@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.4.3] - 2026-11-12
+
+### Diubah
+
+- Bilah sisi dipadatkan supaya muat satu layar laptop: tombol menu 44px menjadi 38px tanpa sela antar tombol, label kelompok lebih rapat, kepala merek dan kartu pengguna lebih kecil, padding bilah sisi dikurangi. Isi bilah sisi admin kini sekitar 606px (dari sekitar 756px) sehingga seluruh menu termasuk Audit dan nomor versi terlihat tanpa menggulir bilah sisi pada viewport 660px ke atas.
+
 ## [1.4.2] - 2026-11-06
 
 ### Diubah
