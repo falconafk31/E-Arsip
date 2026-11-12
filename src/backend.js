@@ -730,7 +730,7 @@ export default {
         const d0 = await env.DB.prepare("SELECT * FROM disposisi WHERE id=?").bind(parseInt(mDispId[1])).first();
         if (!d0) return err("Disposisi tidak ditemukan", 404);
         const st = b.status || d0.status;
-        await env.DB.prepare("UPDATE disposisi SET status=?, selesai_pada=? WHERE id=?").bind(st, st === "Selesai" ? new Date().toISOString() : d0.selesai_pada, d0.id).run();
+        await env.DB.prepare("UPDATE disposisi SET status=?, selesai_pada=? WHERE id=?").bind(st, st === "Selesai" ? new Date().toISOString().slice(0, 19).replace("T", " ") : d0.selesai_pada, d0.id).run();
         await syncStatusDisposisi(env, d0.surat_id);
         await audit(env, user.id, "disposisi-" + st.toLowerCase(), "disposisi", d0.id, "");
         return json({ ok: true });

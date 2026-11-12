@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.1] - 2026-11-12
+
+### Diperbaiki
+
+- Riwayat di halaman Detail menampilkan tanggal selesai disposisi sebagai teks ISO mentah (mis. `2026-11-05T02:56:56.910Z`). Akar masalah: pembaruan status disposisi menulis `selesai_pada` sebagai ISO, sementara `fmtJam` selalu menempel `Z` sehingga hasilnya tanggal tak valid. Backend kini menulis `selesai_pada` format SQLite seperti kolom waktu lain, dan `fmtJam` mentolerir ISO (dengan/tanpa `Z`) supaya baris lama tetap tampil benar.
+
 ## [1.5.0] - 2026-11-12
 
 ### Ditambahkan
