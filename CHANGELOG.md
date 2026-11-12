@@ -2,6 +2,21 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.0] - 2026-11-12
+
+### Ditambahkan
+
+- P10: halaman Detail surat disusun ulang satu kolom dengan 4 seksi bernomor (1. Informasi, 2. Berkas, 3. Disposisi, 4. Riwayat); Penugasan dan Surat Keluar Terkait menjadi sub-blok seksi Informasi. Seksi Riwayat menampilkan garis waktu dari data detail yang sudah ada (dicatat, disposisi dibuat/diselesaikan, berkas diunggah) tanpa endpoint baru. Kepala detail mendapat tombol Tambah Disposisi (gulir ke formulir disposisi dan fokus ke kolom Kepada).
+- P11: flyout pada rel ikon tablet (lebar 721-1024px) untuk Surat Masuk dan Surat Keluar (Daftar, Tambah, Berkas Belum Lengkap), dengan panah, judul, aria-expanded/controls, dan penutup lewat Esc, klik luar, atau pindah halaman. Menu lain tetap navigasi langsung.
+
+### Diubah
+
+- P7 (versi kecil): formulir tambah/ubah surat mendapat legenda "Tanda * wajib diisi", tanda wajib diseragamkan menjadi asterisk merah, dan seksi baru Keterangan (kolom Catatan) yang tersimpan ke data surat. Penomoran ulang seksi tidak dilakukan (susunan formulir yang ada dipertahankan).
+
+### Tidak dikerjakan
+
+- P12 (Pengaturan satu halaman) dilewati atas keputusan Hades; Pengaturan tetap memakai tab.
+
 ## [1.4.9] - 2026-11-12
 
 ### Diubah

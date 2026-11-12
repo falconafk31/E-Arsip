@@ -341,3 +341,15 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--p);vertical-align
 .chip button{width:18px;height:18px;border:0;border-radius:999px;background:rgba(4,119,87,.14);color:#047857;display:inline-grid;place-items:center;cursor:pointer;padding:0;flex:none}
 .chip button:hover{background:rgba(4,119,87,.28)}
 .chip button svg{display:block}
+
+/* 1.5.0 - P7 tanda wajib + P10 sub-judul detail + P11 flyout tablet */
+.rq2{color:var(--dg);font-weight:700}
+.sh{font-size:14px;margin:0 0 10px}
+@media(min-width:721px) and (max-width:1024px){
+  .nv[aria-expanded="true"]{background:#fff;color:var(--p)}
+  .flyout{position:fixed;z-index:60;width:184px;padding:7px;border:1px solid var(--bd2);border-radius:7px;background:#fff;box-shadow:0 10px 24px rgba(15,36,27,.16)}
+  .flyout::before{content:"";position:absolute;top:var(--panah,17px);left:-6px;width:10px;height:10px;border-bottom:1px solid var(--bd2);border-left:1px solid var(--bd2);background:#fff;transform:rotate(45deg)}
+  .flyout-title{min-height:37px;padding:0 10px;display:flex;align-items:center;border-radius:4px;background:var(--ps);color:var(--p);font-size:13px;font-weight:750}
+  .flyout a{min-height:35px;padding:0 10px;display:flex;align-items:center;border-radius:4px;color:var(--tm);font-size:12px;text-decoration:none}
+  .flyout a:hover,.flyout a:focus-visible{outline:none;background:var(--sf2);color:var(--tx)}
+}
