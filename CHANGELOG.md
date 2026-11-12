@@ -2,6 +2,16 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.4.5] - 2026-11-12
+
+### Diubah
+
+- Fondasi komponen bersama (P3, P5, P6, P8, P13 dari audit Terra, dibangun berdasarkan mockup fondasi Terra yang disetujui Hades): tombol distandarkan menjadi tinggi 36px, radius 5px, tebal (primer hijau, sekunder putih bergaris, tautan teks biru #2A6DA6 untuk Atur Ulang dan Detail, merah hanya destruktif, nonaktif memakai latar tint dan kursor tidak-diizinkan, focus outline biru 2px); radius pil 999px dari revisi EMISGTK diganti 5px mengikuti mockup yang disetujui, warna primer tetap hijau-teal.
+- Tabel: kepala tanpa huruf kapital dan tanpa spasi huruf, padding 11px 12px; sel 13px 12px; baris berubah warna saat disorot (#E4F2EE, bukan zebra); centang 16px aksen primer; petunjuk "Geser ke kanan untuk kolom lainnya" tampil di HP sesudah tabel daftar utama (Surat Masuk/Keluar, Data Guru, Tempat Sampah, Audit, Disposisi, Surat Terbaru Beranda).
+- Lencana: Selesai dan Terkirim memakai tint hijau #E6F4EC dengan teks #047857; Belum memakai tint amber #FDF3E0 dengan teks #B7791F; Terlambat dan "Berkas belum diunggah" menjadi pil outline merah (latar putih, border merah); Sifat surat tidak lagi memakai pil warna, tampil sebagai teks tenang abu-hijau; "Diproses" tetap biru.
+- Modal konfirmasi bahaya memakai struktur Terra (tanda seru dalam lingkaran merah, judul tindakan, teks data terdampak, footer aksi berlatar tint dengan Batal dan tombol merah); toast pindah ke kanan atas di desktop dan bawah di HP, berlatar putih dengan garis kiri berwarna (hijau sukses, merah gagal).
+- Toolbar daftar kini memuat hitungan data ("50 surat", "N guru", "N catatan") dan lebih rapat; daftar surat mendapat aksi massal: centang per baris dan pilih semua, tombol "Hapus (N)" aktif hanya bila ada yang dipilih, konfirmasi lalu memindahkan surat terpilih ke Tempat Sampah satu per satu (tanpa endpoint backend baru, memakai DELETE yang sudah ada). Toolbar Sampah tidak ditambah (hitungannya sudah di baris halaman) dan Disposisi tetap tanpa toolbar.
+
 ## [1.4.4] - 2026-11-12
 
 ### Diubah

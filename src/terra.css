@@ -290,3 +290,39 @@ input[type=range]{accent-color:var(--p)}
 .gold2{color:#C9A227;font-weight:700}
 .lk2{color:#2A6DA6;font-size:13px;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap}
 .lk2:hover{text-decoration:underline}
+
+/* 1.4.5 - fondasi komponen Terra (P3/P5/P6/P8/P13), mockup fondasi */
+.btn{height:36px;padding:0 13px;font-size:13px;font-weight:700;border-radius:5px}
+.btn:disabled{background:var(--sf2);color:var(--tf);border-color:var(--bd);opacity:1;cursor:not-allowed}
+.btn.lk{background:none;border:0;color:#2A6DA6;font-weight:700;font-size:13px;padding:0 3px;height:36px;display:inline-flex;align-items:center;cursor:pointer;white-space:nowrap}
+.btn.lk:hover{text-decoration:underline}
+.btn.icn{width:36px;height:36px;padding:0}
+:focus-visible{outline:2px solid #2A6DA6;outline-offset:2px}
+.ok{--bg:#E6F4EC;--fg:#047857}
+.wn{--bg:#FDF3E0;--fg:#B7791F}
+.pr{--bg:#E6F4EC;--fg:#047857}
+.bd{padding:0 8px}
+.bd.dg{background:#fff;border:1px solid var(--dg)}
+.sft{color:var(--tm);font-size:13px;font-weight:500;white-space:nowrap}
+th{font-weight:700;text-transform:none;letter-spacing:0;padding:11px 12px;height:auto}
+td{padding:13px 12px}
+tbody tr:hover{background:var(--ps)}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--p);vertical-align:-3px}
+.tcnt{font-weight:800;white-space:nowrap;min-width:68px;color:var(--tx)}
+.tb{padding:10px 12px}
+.scnote{display:none}
+@media(max-width:720px){.scnote{display:block;text-align:right;color:var(--tf);font-size:12px;margin-top:9px}}
+.ts{top:20px;bottom:auto;background:#fff;color:var(--tx);border:1px solid var(--bd);border-left:4px solid var(--p);border-radius:6px;padding:12px;transform:translateY(-12px)}
+.ts .ic{color:var(--p)}
+.ts.err{border-left-color:var(--dg)}
+.ts.err .ic{color:var(--dg)}
+.ts.warn{border-left-color:#B7791F}
+.ts.warn .ic{color:#B7791F}
+#toastBtn{background:none;border:0;color:var(--p);font-weight:700;cursor:pointer;padding:0}
+@media(max-width:720px){.ts{left:12px;right:12px;top:auto;bottom:12px}}
+.mb.m-danger{padding:0;overflow:hidden;border-radius:8px}
+.m-top{padding:20px;border-bottom:1px solid var(--bd)}
+.danger-mark{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--dg);border-radius:50%;color:var(--dg);font-weight:800;margin-bottom:12px}
+.m-top h3{font-size:17px;text-transform:none;letter-spacing:0;color:var(--tx);margin:0}
+.m-top p{margin:8px 0 0;color:var(--tm)}
+.modal-actions{display:flex;justify-content:flex-end;gap:9px;padding:14px 20px;background:var(--sf2)}
