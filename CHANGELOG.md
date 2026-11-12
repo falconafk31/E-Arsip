@@ -2,6 +2,13 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.2] - 2026-11-12
+
+### Diubah
+
+- Optimasi saran Copilot butir 2 dan 3 (disetujui Hades, hasil tidak berubah): query independen di dashboard (12 query) dan rekap (9 query) kini berjalan sejajar lewat `Promise.all`; filter tanggal `substr()` diganti rentang ISO `tanggal_agenda >= ? AND tanggal_agenda < ?` di daftar surat, cetak agenda (bulan/tahun/triwulan), menu Agenda, rekap, unduh CSV rekap, dan dashboard. Hitungan sebelum dan sesudah diverifikasi sama persis (dashboard 16/25, rekap 17/25/42). Pengelompokan per bulan (`GROUP BY` bulan) dipertahankan karena memang butuh ekstraksi bulan.
+- Hitungan bulan di dashboard kini memakai parameter terikat (sebelumnya nilai bulan disisipkan langsung ke SQL).
+
 ## [1.5.1] - 2026-11-12
 
 ### Diperbaiki

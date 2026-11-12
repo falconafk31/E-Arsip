@@ -12,6 +12,9 @@ function err(msg, status = 400) { return json({ error: msg }, status); }
 function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 function csvCell(v) { const t = String(v ?? ""); return /[",\n;]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }
 function todayWIB() { return new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10); }
+function bulanBerikut(ym) { const y = parseInt(ym.slice(0, 4), 10), m = parseInt(ym.slice(5, 7), 10); return m === 12 ? (y + 1) + "-01" : ym.slice(0, 4) + "-" + String(m + 1).padStart(2, "0"); }
+function rentangBulan(ym) { return [ym + "-01", bulanBerikut(ym) + "-01"]; }
+function rentangTahun(th) { const y = String(th); return [y + "-01-01", (parseInt(y, 10) + 1) + "-01-01"]; }
 const ZONA_OFF = { WIB: 7, WITA: 8, WIT: 9 };
 function nowZona(st) { const z = (st && st.zona_waktu) || "WIB"; return { d: new Date(Date.now() + (ZONA_OFF[z] || 7) * 3600 * 1000), z }; }
 function tglPanjang(st) { const o = nowZona(st); return o.d.getUTCDate() + " " + BULAN_NAMA[o.d.getUTCMonth()] + " " + o.d.getUTCFullYear(); }
@@ -116,8 +119,8 @@ async function listSurat(req, env, user) {
   const binds = [];
   if (jenis) { where += " AND s.jenis=?"; binds.push(jenis); }
   if (q) { where += " AND (s.nomor_surat LIKE ? OR s.nomor_agenda LIKE ? OR s.perihal LIKE ? OR s.ringkasan LIKE ? OR s.asal LIKE ? OR s.tujuan LIKE ?)"; const p = `%${q}%`; binds.push(p, p, p, p, p, p); }
-  if (bulan) { where += " AND substr(s.tanggal_agenda,1,7)=?"; binds.push(bulan); }
-  if (tahun) { where += " AND substr(s.tanggal_agenda,1,4)=?"; binds.push(tahun); }
+  if (bulan) { const [a, b] = rentangBulan(bulan); where += " AND s.tanggal_agenda>=? AND s.tanggal_agenda<?"; binds.push(a, b); }
+  if (tahun) { const [a, b] = rentangTahun(tahun); where += " AND s.tanggal_agenda>=? AND s.tanggal_agenda<?"; binds.push(a, b); }
   if (klasifikasi) { where += " AND s.klasifikasi=?"; binds.push(klasifikasi); }
   if (sifat) { where += " AND s.sifat=?"; binds.push(sifat); }
   if (status) { where += " AND COALESCE(s.status_disposisi,'Belum')=?"; binds.push(status); }
@@ -464,35 +467,39 @@ async function syncStatusDisposisi(env, suratId) {
 
 // ---------- API: rekap ----------
 async function rekapData(env, tahun) {
-  const perBulan = await env.DB.prepare(
-    `SELECT substr(tanggal_agenda,6,2) bln,
-       SUM(CASE WHEN jenis='masuk' THEN 1 ELSE 0 END) masuk,
-       SUM(CASE WHEN jenis='keluar' THEN 1 ELSE 0 END) keluar, COUNT(*) total
-     FROM surat WHERE terhapus_pada IS NULL AND substr(tanggal_agenda,1,4)=? GROUP BY bln ORDER BY bln`).bind(tahun).all();
-  const perKlas = await env.DB.prepare(
-    `SELECT COALESCE(klasifikasi,'Tanpa klasifikasi') nama,
-       SUM(CASE WHEN jenis='masuk' THEN 1 ELSE 0 END) masuk,
-       SUM(CASE WHEN jenis='keluar' THEN 1 ELSE 0 END) keluar, COUNT(*) total
-     FROM surat WHERE terhapus_pada IS NULL AND substr(tanggal_agenda,1,4)=? GROUP BY nama ORDER BY total DESC`).bind(tahun).all();
-  const perSifat = await env.DB.prepare(
-    `SELECT sifat nama,
-       SUM(CASE WHEN jenis='masuk' THEN 1 ELSE 0 END) masuk,
-       SUM(CASE WHEN jenis='keluar' THEN 1 ELSE 0 END) keluar, COUNT(*) total
-     FROM surat WHERE terhapus_pada IS NULL AND substr(tanggal_agenda,1,4)=? GROUP BY nama ORDER BY total DESC`).bind(tahun).all();
-  const totals = await env.DB.prepare(
-    `SELECT SUM(CASE WHEN jenis='masuk' THEN 1 ELSE 0 END) masuk, SUM(CASE WHEN jenis='keluar' THEN 1 ELSE 0 END) keluar, COUNT(*) total,
-       SUM(CASE WHEN sifat='Rahasia' THEN 1 ELSE 0 END) rahasia,
-       SUM(CASE WHEN jenis='masuk' AND COALESCE(status_disposisi,'Belum')!='Selesai' THEN 1 ELSE 0 END) disposisi_belum
-     FROM surat WHERE terhapus_pada IS NULL AND substr(tanggal_agenda,1,4)=?`).bind(tahun).first();
-  const tanpaScan = await env.DB.prepare(
-    `SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND substr(s.tanggal_agenda,1,4)=? AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')`).bind(tahun).first();
-  const tanpaLokasi = await env.DB.prepare(
-    `SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND substr(tanggal_agenda,1,4)=? AND (lokasi_fisik IS NULL OR lokasi_fisik='')`).bind(tahun).first();
-  const disp = await env.DB.prepare(
-    `SELECT d.status, COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND substr(s.tanggal_agenda,1,4)=? GROUP BY d.status`).bind(tahun).all();
-  const terlambat = await env.DB.prepare(
-    `SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND substr(s.tanggal_agenda,1,4)=? AND d.status!='Selesai' AND d.batas_waktu IS NOT NULL AND d.batas_waktu < ?`).bind(tahun, todayWIB()).first();
-  const agT = await env.DB.prepare("SELECT jenis, terakhir FROM nomor_counter WHERE tahun=?").bind(parseInt(tahun, 10)).all(); const agendaTerakhir = { masuk: 0, keluar: 0 }; for (const r of agT.results) agendaTerakhir[r.jenis] = r.terakhir;
+  const [tAwal, tAkhir] = rentangTahun(tahun);
+  const [perBulan, perKlas, perSifat, totals, tanpaScan, tanpaLokasi, disp, terlambat, agT] = await Promise.all([
+    env.DB.prepare(
+      `SELECT substr(tanggal_agenda,6,2) bln,
+         SUM(CASE WHEN jenis='masuk' THEN 1 ELSE 0 END) masuk,
+         SUM(CASE WHEN jenis='keluar' THEN 1 ELSE 0 END) keluar, COUNT(*) total
+       FROM surat WHERE terhapus_pada IS NULL AND tanggal_agenda>=? AND tanggal_agenda<? GROUP BY bln ORDER BY bln`).bind(tAwal, tAkhir).all(),
+    env.DB.prepare(
+      `SELECT COALESCE(klasifikasi,'Tanpa klasifikasi') nama,
+         SUM(CASE WHEN jenis='masuk' THEN 1 ELSE 0 END) masuk,
+         SUM(CASE WHEN jenis='keluar' THEN 1 ELSE 0 END) keluar, COUNT(*) total
+       FROM surat WHERE terhapus_pada IS NULL AND tanggal_agenda>=? AND tanggal_agenda<? GROUP BY nama ORDER BY total DESC`).bind(tAwal, tAkhir).all(),
+    env.DB.prepare(
+      `SELECT sifat nama,
+         SUM(CASE WHEN jenis='masuk' THEN 1 ELSE 0 END) masuk,
+         SUM(CASE WHEN jenis='keluar' THEN 1 ELSE 0 END) keluar, COUNT(*) total
+       FROM surat WHERE terhapus_pada IS NULL AND tanggal_agenda>=? AND tanggal_agenda<? GROUP BY nama ORDER BY total DESC`).bind(tAwal, tAkhir).all(),
+    env.DB.prepare(
+      `SELECT SUM(CASE WHEN jenis='masuk' THEN 1 ELSE 0 END) masuk, SUM(CASE WHEN jenis='keluar' THEN 1 ELSE 0 END) keluar, COUNT(*) total,
+         SUM(CASE WHEN sifat='Rahasia' THEN 1 ELSE 0 END) rahasia,
+         SUM(CASE WHEN jenis='masuk' AND COALESCE(status_disposisi,'Belum')!='Selesai' THEN 1 ELSE 0 END) disposisi_belum
+       FROM surat WHERE terhapus_pada IS NULL AND tanggal_agenda>=? AND tanggal_agenda<?`).bind(tAwal, tAkhir).first(),
+    env.DB.prepare(
+      `SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND s.tanggal_agenda>=? AND s.tanggal_agenda<? AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')`).bind(tAwal, tAkhir).first(),
+    env.DB.prepare(
+      `SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND tanggal_agenda>=? AND tanggal_agenda<? AND (lokasi_fisik IS NULL OR lokasi_fisik='')`).bind(tAwal, tAkhir).first(),
+    env.DB.prepare(
+      `SELECT d.status, COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND s.tanggal_agenda>=? AND s.tanggal_agenda<? GROUP BY d.status`).bind(tAwal, tAkhir).all(),
+    env.DB.prepare(
+      `SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND s.tanggal_agenda>=? AND s.tanggal_agenda<? AND d.status!='Selesai' AND d.batas_waktu IS NOT NULL AND d.batas_waktu < ?`).bind(tAwal, tAkhir, todayWIB()).first(),
+    env.DB.prepare("SELECT jenis, terakhir FROM nomor_counter WHERE tahun=?").bind(parseInt(tahun, 10)).all(),
+  ]);
+  const agendaTerakhir = { masuk: 0, keluar: 0 }; for (const r of agT.results) agendaTerakhir[r.jenis] = r.terakhir;
   return { tahun, totals, agenda_terakhir: agendaTerakhir, tanpa_scan: tanpaScan.c, tanpa_lokasi: tanpaLokasi.c, per_bulan: perBulan.results, per_klasifikasi: perKlas.results, per_sifat: perSifat.results, disposisi_status: disp.results, disposisi_terlambat: terlambat.c };
 }
 function rekapCsv(kind, data, rows) {
@@ -525,9 +532,9 @@ async function cetakAgenda(req, env, user) {
   const bulan = u.searchParams.get("bulan"), tahun = u.searchParams.get("tahun"), jenis = u.searchParams.get("jenis");
   const dari = u.searchParams.get("dari"), sampai = u.searchParams.get("sampai");
   let where = "terhapus_pada IS NULL"; const binds = [];
-  if (dari && sampai) { where += " AND substr(tanggal_agenda,1,7)>=? AND substr(tanggal_agenda,1,7)<=?"; binds.push(dari, sampai); }
-  if (bulan) { where += " AND substr(tanggal_agenda,1,7)=?"; binds.push(bulan); }
-  if (tahun) { where += " AND substr(tanggal_agenda,1,4)=?"; binds.push(tahun); }
+  if (dari && sampai) { const [a, b] = rentangBulan(sampai); where += " AND tanggal_agenda>=? AND tanggal_agenda<?"; binds.push(dari + "-01", b); }
+  if (bulan) { const [a, b] = rentangBulan(bulan); where += " AND tanggal_agenda>=? AND tanggal_agenda<?"; binds.push(a, b); }
+  if (tahun) { const [a, b] = rentangTahun(tahun); where += " AND tanggal_agenda>=? AND tanggal_agenda<?"; binds.push(a, b); }
   if (jenis) { where += " AND jenis=?"; binds.push(jenis); }
   const stA = await getSettings(env);
   const { results } = await env.DB.prepare(`SELECT * FROM surat WHERE ${where} ORDER BY tanggal_agenda, id`).bind(...binds).all();
@@ -640,20 +647,32 @@ export default {
       }
       if (path === "/api/dashboard") {
         const ym = todayWIB().slice(0, 7);
-        const t = async sql => (await env.DB.prepare(sql).first()).c;
-        const perBulan = await env.DB.prepare("SELECT substr(tanggal_agenda,6,2) bln, COUNT(*) total FROM surat WHERE terhapus_pada IS NULL AND tanggal_agenda >= date('now','-5 months','start of month') GROUP BY substr(tanggal_agenda,1,7) ORDER BY substr(tanggal_agenda,1,7)").all();
-        const terbaru = await env.DB.prepare("SELECT s.*, (SELECT COUNT(*) FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat') file_count FROM surat s WHERE s.terhapus_pada IS NULL ORDER BY s.id DESC LIMIT 8").all();
-        const perhatian = await env.DB.prepare("SELECT s.perihal, s.nomor_agenda, d.kepada, d.batas_waktu, d.status sts FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai' ORDER BY (d.batas_waktu IS NULL), d.batas_waktu LIMIT 5").all();
+        const [bAwal, bAkhir] = rentangBulan(ym);
+        const t = (sql, ...args) => env.DB.prepare(sql).bind(...args).first().then(r => r.c);
+        const [perBulan, terbaru, perhatian, masukBulanIni, keluarBulanIni, totalMasuk, totalKeluar, disposisiTerbuka, disposisiTerlambat, tanpaScan, tanpaScanMasuk, tanpaScanKeluar] = await Promise.all([
+          env.DB.prepare("SELECT substr(tanggal_agenda,6,2) bln, COUNT(*) total FROM surat WHERE terhapus_pada IS NULL AND tanggal_agenda >= date('now','-5 months','start of month') GROUP BY substr(tanggal_agenda,1,7) ORDER BY substr(tanggal_agenda,1,7)").all(),
+          env.DB.prepare("SELECT s.*, (SELECT COUNT(*) FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat') file_count FROM surat s WHERE s.terhapus_pada IS NULL ORDER BY s.id DESC LIMIT 8").all(),
+          env.DB.prepare("SELECT s.perihal, s.nomor_agenda, d.kepada, d.batas_waktu, d.status sts FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai' ORDER BY (d.batas_waktu IS NULL), d.batas_waktu LIMIT 5").all(),
+          t("SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND jenis='masuk' AND tanggal_agenda>=? AND tanggal_agenda<?", bAwal, bAkhir),
+          t("SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND jenis='keluar' AND tanggal_agenda>=? AND tanggal_agenda<?", bAwal, bAkhir),
+          t("SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND jenis='masuk'"),
+          t("SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND jenis='keluar'"),
+          t("SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai'"),
+          t("SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai' AND d.batas_waktu IS NOT NULL AND d.batas_waktu < ?", todayWIB()),
+          t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
+          t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND s.jenis='masuk' AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
+          t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND s.jenis='keluar' AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
+        ]);
         return json({
-          masuk_bulan_ini: await t(`SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND jenis='masuk' AND substr(tanggal_agenda,1,7)='${ym}'`),
-          keluar_bulan_ini: await t(`SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND jenis='keluar' AND substr(tanggal_agenda,1,7)='${ym}'`),
-          total_masuk: await t("SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND jenis='masuk'"),
-          total_keluar: await t("SELECT COUNT(*) c FROM surat WHERE terhapus_pada IS NULL AND jenis='keluar'"),
-          disposisi_terbuka: await t("SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai'"),
-          disposisi_terlambat: await env.DB.prepare("SELECT COUNT(*) c FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai' AND d.batas_waktu IS NOT NULL AND d.batas_waktu < ?").bind(todayWIB()).first().then(r => r.c),
-          tanpa_scan: await t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
-          tanpa_scan_masuk: await t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND s.jenis='masuk' AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
-          tanpa_scan_keluar: await t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND s.jenis='keluar' AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
+          masuk_bulan_ini: masukBulanIni,
+          keluar_bulan_ini: keluarBulanIni,
+          total_masuk: totalMasuk,
+          total_keluar: totalKeluar,
+          disposisi_terbuka: disposisiTerbuka,
+          disposisi_terlambat: disposisiTerlambat,
+          tanpa_scan: tanpaScan,
+          tanpa_scan_masuk: tanpaScanMasuk,
+          tanpa_scan_keluar: tanpaScanKeluar,
           per_bulan: perBulan.results, terbaru: terbaru.results.map(r => maskSurat(user, r)), perhatian: perhatian.results,
         });
       }
@@ -738,7 +757,7 @@ export default {
       if (path === "/api/agenda" && req.method === "GET") {
         const bulan = u.searchParams.get("bulan"), jenis = u.searchParams.get("jenis");
         let where = "terhapus_pada IS NULL"; const binds = [];
-        if (bulan) { where += " AND substr(tanggal_agenda,1,7)=?"; binds.push(bulan); }
+        if (bulan) { const [a, b] = rentangBulan(bulan); where += " AND tanggal_agenda>=? AND tanggal_agenda<?"; binds.push(a, b); }
         if (jenis) { where += " AND jenis=?"; binds.push(jenis); }
         const SORT_AG = { tanggal: "tanggal_agenda", agenda: "nomor_agenda", nomor: "nomor_surat", perihal: "perihal", jenis: "jenis", klasifikasi: "klasifikasi", sifat: "sifat", status: "status_disposisi" };
         const colAG = SORT_AG[u.searchParams.get("sort")] || "tanggal_agenda";
@@ -756,10 +775,11 @@ export default {
         let csv;
         if (kind === "ringkasan") csv = rekapCsv("ringkasan", await rekapData(env, tahun), null);
         else {
+          const [tAwal, tAkhir] = rentangTahun(tahun);
           const q = kind === "masuk"
-            ? "SELECT s.*, d.kepada, d.instruksi, d.batas_waktu bw, d.status sts, EXISTS(SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat') ada_scan FROM surat s LEFT JOIN disposisi d ON d.id=(SELECT MAX(id) FROM disposisi WHERE surat_id=s.id) WHERE s.terhapus_pada IS NULL AND s.jenis='masuk' AND substr(s.tanggal_agenda,1,4)=? ORDER BY s.tanggal_agenda, s.id"
-            : "SELECT s.*, EXISTS(SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat') ada_scan FROM surat s WHERE s.terhapus_pada IS NULL AND s.jenis='keluar' AND substr(s.tanggal_agenda,1,4)=? ORDER BY s.tanggal_agenda, s.id";
-          const { results } = await env.DB.prepare(q).bind(tahun).all();
+            ? "SELECT s.*, d.kepada, d.instruksi, d.batas_waktu bw, d.status sts, EXISTS(SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat') ada_scan FROM surat s LEFT JOIN disposisi d ON d.id=(SELECT MAX(id) FROM disposisi WHERE surat_id=s.id) WHERE s.terhapus_pada IS NULL AND s.jenis='masuk' AND s.tanggal_agenda>=? AND s.tanggal_agenda<? ORDER BY s.tanggal_agenda, s.id"
+            : "SELECT s.*, EXISTS(SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat') ada_scan FROM surat s WHERE s.terhapus_pada IS NULL AND s.jenis='keluar' AND s.tanggal_agenda>=? AND s.tanggal_agenda<? ORDER BY s.tanggal_agenda, s.id";
+          const { results } = await env.DB.prepare(q).bind(tAwal, tAkhir).all();
           const rows = results.map(r => { const m = maskSurat(user, r); return { ...r, perihal: m.perihal, ringkasan: m.ringkasan, nomor_surat: m.nomor_surat, ada_scan: r.ada_scan ? "ya" : "tidak" }; });
           csv = rekapCsv(kind, null, rows);
         }
