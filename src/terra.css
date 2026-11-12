@@ -67,7 +67,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .pw button{position:absolute;right:4px;top:4px;width:32px;height:32px;border:0;background:none;color:var(--tm);cursor:pointer;border-radius:6px}
 .er{color:var(--dg);font-weight:600;font-size:13px}
 /* forms */
-.fl{margin-bottom:14px}.fl:last-child{margin-bottom:0}
+.fl{margin-bottom:20px}.fl:last-child{margin-bottom:0}
 .fl label,.lb{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
 .rq{font-weight:400;color:var(--tm);font-size:12px}
 input,select,textarea{width:100%;height:40px;border:1px solid var(--bd2);border-radius:8px;padding:0 12px;background:#fff}
@@ -352,4 +352,13 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--p);vertical-align
   .flyout-title{min-height:37px;padding:0 10px;display:flex;align-items:center;border-radius:4px;background:var(--ps);color:var(--p);font-size:13px;font-weight:750}
   .flyout a{min-height:35px;padding:0 10px;display:flex;align-items:center;border-radius:4px;color:var(--tm);font-size:12px;text-decoration:none}
   .flyout a:hover,.flyout a:focus-visible{outline:none;background:var(--sf2);color:var(--tx)}
+}
+
+/* Target sentuh minimal 44px di HP; input formulir 44px (standar 2026, revisi UI/UX 2026) */
+@media(max-width:720px){
+  .btn{min-height:44px;min-width:44px}
+  input,select,textarea{height:44px}
+  .nv{min-height:44px}
+  .top .hb{width:44px;height:44px}
+  .dz{min-height:60px}
 }

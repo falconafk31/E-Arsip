@@ -2,6 +2,17 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.3] - 2026-11-12
+
+### Ditambahkan
+
+- Perubahan UI/UX dari agent Arena AI (branch `arena/26357db2-e-arsip`, PR #1, keputusan Hades: grafik Opsi B + lingkup label saja + B + G): empty state kini instruktif dengan CTA spesifik yang menghormati izin peran ("Tambah Surat Pertama", "Tambah Guru Pertama", "Tambah Disposisi"; Pengamat tidak melihat tombol tambah) dan saran "Coba longgarkan kata kunci atau filter." saat hasil saringan kosong; label tombol spesifik (verb + objek: "Simpan Surat", "Simpan Pengaturan", "Simpan Klasifikasi", "Simpan Data Guru", "Ubah Surat", "Ubah Data Guru", "Ubah Klasifikasi", "Hapus Lampiran", "Hapus Klasifikasi"); header tabel konsisten ("No" menjadi "No.", "File" menjadi "Jumlah Berkas"); target sentuh minimal 44px di HP (tombol, input, navigasi bilah sisi, hamburger, dropzone 60px); jarak grup formulir 14px menjadi 20px; modal bisa ditutup dengan Esc; aria-label dilengkapi di semua tombol hanya-ikon; ikon empty state spesifik per layar; label kartu "Disposisi Belum Selesai"; grafik batang 6 bulan tetap tampil di beranda (Opsi B).
+- Dokumen `docs/RINGKASAN-UI-UX.md` dan pratinjau HTML `docs/preview/` dari Arena.
+
+### Tidak diubah
+
+- Konsolidasi varian tombol (A) dan loading/disabled di semua tombol aksi (H) sengaja tidak dikerjakan: varian tombol adalah ukuran dan keadaan (fondasi 1.4.5 dikunci), pola loading/disabled yang ada di hapus massal sudah cukup. Hierarki primer, posisi tombol, dan bedakan navigasi vs aksi (C/D/E) ditunda sebagai usulan mockup. Label terkunci (status disposisi, Terkirim, Surat Tugas/SPPD, peran, nama menu, "Berkas belum diunggah", format agenda/ttd/kop), palet EMISGTK, font sistem, backend, dan skema tidak disentuh.
+
 ## [1.5.2] - 2026-11-12
 
 ### Diubah
