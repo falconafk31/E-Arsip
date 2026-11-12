@@ -167,7 +167,7 @@ function renderShell() {
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.4.6</div></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.4.7</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => (b.onclick = () => go(b.dataset.go)));
@@ -258,7 +258,7 @@ async function viewBeranda() {
 
 /* ---------- daftar surat masuk / keluar ---------- */
 const listState = { masuk: null, keluar: null };
-function listStateBaru(jenis) { return { q: "", bulan: "", bulanM: "", bulanT: "", sifat: "", klasifikasi: "", status: "", tanpa_scan: false, page: 1, sort: "tanggal", dir: "asc", jenis, pilih: new Set(), panel: false }; }
+function listStateBaru(jenis) { return { q: "", bulan: "", bulanM: "", bulanT: "", sifat: "", klasifikasi: "", status: "", tanpa_scan: false, page: 1, sort: "tanggal", dir: "asc", jenis, pilih: new Set(), panel: false, menghapus: false }; }
 async function viewList(jenis) {
   if (!listState[jenis]) listState[jenis] = listStateBaru(jenis);
   const st = listState[jenis];
@@ -304,9 +304,6 @@ async function muatList(jenis) {
   if (st.klasifikasi) qs.set("klasifikasi", st.klasifikasi); if (st.status) qs.set("status", st.status); if (st.tanpa_scan) qs.set("tanpa_scan", "1");
   qs.set("sort", st.sort); qs.set("dir", st.dir);
   let d; try { d = await api("/api/surat?" + qs); } catch (e) { $("#listBody").innerHTML = '<div class="cb er">' + esc(e.message) + "</div>"; return; }
-  if (!d.items.length) { $("#listBody").innerHTML = kosong("Tidak ada surat yang cocok", "Coba longgarkan kata kunci atau filter."); return; }
-  const pages = Math.max(1, Math.ceil(d.total / 25));
-  const tc0 = $("#tbCount"); if (tc0) tc0.textContent = d.total + " surat";
   const chips = [];
   if (st.q) chips.push(["q", "Kata: " + st.q]);
   if (st.bulan) { const pb = st.bulan.split("-"); chips.push(["bulan", "Bulan: " + BULAN_ID[parseInt(pb[1], 10) - 1] + " " + pb[0]]); }
@@ -314,7 +311,12 @@ async function muatList(jenis) {
   if (st.sifat) chips.push(["sifat", "Sifat: " + st.sifat]);
   if (st.status) chips.push(["status", "Status: " + st.status]);
   if (st.tanpa_scan) chips.push(["tanpa_scan", "Berkas belum diunggah" + (d.total ? " (" + d.total + " surat)" : "")]);
-  let h = (chips.length ? '<div class="chips">' + chips.map(([k, l]) => '<span class="chip">' + esc(l) + '<button type="button" data-chip="' + k + '" aria-label="Hapus filter"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></button></span>').join("") + "</div>" : "") + '<div class="tw"><table class="a"><thead><tr>' + "<th style=\"width:40px\"><input type=\"checkbox\" id=\"selSemua\" aria-label=\"Pilih semua surat\"></th><th style=\"width:52px\">No</th>" + thUrut("Nomor Surat", "nomor", st) + thUrut("Tanggal Agenda", "tanggal", st) + thUrut("Perihal", "perihal", st) + "<th>" + (jenis === "masuk" ? "Asal" : "Tujuan") + "</th>" + thUrut("Klasifikasi", "klasifikasi", st) + thUrut("Sifat", "sifat", st) + thUrut("Status", "status", st) + "<th>Aksi</th></tr></thead><tbody>";
+  const chipsHtml = chips.length ? '<div class="chips">' + chips.map(([k, l]) => '<span class="chip">' + esc(l) + '<button type="button" data-chip="' + k + '" aria-label="Hapus filter"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></button></span>').join("") + "</div>" : "";
+  const ikatChip = () => $$("#listBody [data-chip]").forEach((b) => (b.onclick = () => { const k = b.dataset.chip; if (k === "tanpa_scan") st.tanpa_scan = false; else st[k] = ""; if (k === "bulan") { st.bulanM = ""; st.bulanT = ""; } st.page = 1; viewList(jenis); }));
+  if (!d.items.length) { $("#listBody").innerHTML = chipsHtml + kosong("Tidak ada surat yang cocok", "Coba longgarkan kata kunci atau filter."); ikatChip(); return; }
+  const pages = Math.max(1, Math.ceil(d.total / 25));
+  const tc0 = $("#tbCount"); if (tc0) tc0.textContent = d.total + " surat";
+  let h = chipsHtml + '<div class="tw"><table class="a"><thead><tr>' + "<th style=\"width:40px\"><input type=\"checkbox\" id=\"selSemua\" aria-label=\"Pilih semua surat\"></th><th style=\"width:52px\">No</th>" + thUrut("Nomor Surat", "nomor", st) + thUrut("Tanggal Agenda", "tanggal", st) + thUrut("Perihal", "perihal", st) + "<th>" + (jenis === "masuk" ? "Asal" : "Tujuan") + "</th>" + thUrut("Klasifikasi", "klasifikasi", st) + thUrut("Sifat", "sifat", st) + thUrut("Status", "status", st) + "<th>Aksi</th></tr></thead><tbody>";
   d.items.forEach((r, idx) => {
     h += '<tr class="rw" data-id="' + r.id + '"><td><input type="checkbox" class="row-check" data-id="' + r.id + '"' + (st.pilih.has(r.id) ? " checked" : "") + ' aria-label="Pilih surat"></td><td>' + ((st.page - 1) * 25 + idx + 1) + '</td><td><b>' + esc(r.nomor_surat) + "</b><small>Agenda " + esc(r.nomor_agenda || "-") + "</small></td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td><b>" + esc(ringkas(r.perihal)) + "</b>" + (r.file_count ? '<small>' + r.file_count + ' berkas surat</small>' + (r.pendukung_count ? '<small>' + r.pendukung_count + ' lampiran pendukung</small>' : '') : '<div style="margin-top:4px"><span class="bd dg">' + ic("upload") + 'Berkas belum diunggah</span></div>') + "</td><td>" + esc(ringkas((jenis === "masuk" ? r.asal : r.tujuan) || "-")) + "</td><td>" + esc(r.klasifikasi || "-") + "</td><td>" + badgeSifat(r.sifat) + "</td><td>" + (jenis === "masuk" ? badgeStatus(r.status_disposisi) + (() => { const tg = labelTenggat(r.tenggat); return tg ? '<div style="margin-top:4px"><span class="bd ' + tg.k + '">' + tg.t + "</span></div>" : ""; })() : '<span class="bd ok">Terkirim</span>') + '</td><td><span class="acts" style="justify-content:flex-end">' + (canEditNow() && r2Aktif && !r.file_count ? '<button class="btn sec sm" data-unggah="' + r.id + '">' + ic("upload") + "Unggah</button>" : "") + '<button class="btn lk" data-detail="' + r.id + '">Detail</button></span></td></tr>';
   });
@@ -327,7 +329,7 @@ async function muatList(jenis) {
   $$("#listBody tr.rw").forEach((tr) => (tr.onclick = () => { window._detailJenis = jenis; go("detail", parseInt(tr.dataset.id, 10)); }));
   $$("#listBody [data-pg]").forEach((b) => (b.onclick = () => { st.page = parseInt(b.dataset.pg, 10); muatList(jenis); }));
   ikatUrut(st, () => muatList(jenis));
-  $$("#listBody [data-chip]").forEach((b) => (b.onclick = () => { const k = b.dataset.chip; if (k === "tanpa_scan") st.tanpa_scan = false; else st[k] = ""; if (k === "bulan") { st.bulanM = ""; st.bulanT = ""; } st.page = 1; viewList(jenis); }));
+  ikatChip();
   $$("#listBody [data-unggah]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); const qf2 = $("#quickFile"); qf2.dataset.target = b.dataset.unggah; qf2.click(); }));
   $$("#listBody .row-check").forEach((c) => { c.onclick = (e) => e.stopPropagation(); c.onchange = () => { const id = parseInt(c.dataset.id, 10); if (c.checked) st.pilih.add(id); else st.pilih.delete(id); segarMassal(jenis); }; });
   const sa = $("#selSemua"); if (sa) sa.onchange = () => { $$("#listBody .row-check").forEach((c) => { c.checked = sa.checked; const id = parseInt(c.dataset.id, 10); if (sa.checked) st.pilih.add(id); else st.pilih.delete(id); }); segarMassal(jenis); };
@@ -341,13 +343,19 @@ function segarMassal(jenis) {
   const sa = $("#selSemua"); if (sa) { const vis = $$("#listBody .row-check"); const cek = vis.filter((c) => c.checked).length; sa.checked = vis.length > 0 && cek === vis.length; sa.indeterminate = cek > 0 && cek < vis.length; }
 }
 async function hapusMassal(jenis) {
-  const st = listState[jenis]; if (!st || !st.pilih.size) return;
+  const st = listState[jenis]; if (!st || !st.pilih.size || st.menghapus) return;
   const ids = [...st.pilih]; const n = ids.length;
   konfirmasi("Hapus " + n + " surat?", "Surat yang dipilih akan dipindahkan ke Tempat Sampah dan bisa dipulihkan dalam 30 hari.", "Hapus", async () => {
+    st.menghapus = true;
+    const bb = $("#bHapusMassal"); if (bb) { bb.disabled = true; bb.textContent = "Menghapus..."; }
+    toast("Menghapus " + n + " surat...");
     let gagal = 0;
-    for (const id of ids) { try { await api("/api/surat/" + id, { method: "DELETE" }); } catch (e) { gagal++; } }
+    try {
+      for (let i = 0; i < ids.length; i += 5) { const r = await Promise.all(ids.slice(i, i + 5).map((id) => api("/api/surat/" + id, { method: "DELETE" }).then(() => 0).catch(() => 1))); gagal += r.reduce((a, b) => a + b, 0); }
+    } finally { st.menghapus = false; }
     st.pilih.clear();
-    toast(gagal ? (n - gagal) + " surat dipindahkan, " + gagal + " gagal" : n + " surat dipindahkan ke Tempat Sampah", gagal > 0);
+    if (gagal) toast((n - gagal) + " surat dipindahkan, " + gagal + " gagal", true);
+    else toastAksi(n + " surat dipindahkan ke Tempat Sampah", "Lihat Sampah", () => go("sampah"));
     muatList(jenis);
   });
 }
