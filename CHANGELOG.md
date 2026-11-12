@@ -2,6 +2,14 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.4.6] - 2026-11-12
+
+### Diubah
+
+- Saringan daftar surat dikelompokkan (P4 dari audit Terra, mengikuti mockup saringan yang disetujui): baris utama kini hanya berisi hitungan, pencarian, dan tombol Filter; saringan lanjutan (bulan, sifat/klasifikasi, status, "Berkas belum diunggah", "Atur Ulang") pindah ke panel yang dibuka lewat tombol Filter dan bisa digeser horisontal di HP. Tombol Filter berubah hijau dengan lencana jumlah filter aktif bila ada filter yang dipakai; chip tetap hanya muncul sesudah filter dipakai dan masing-masing bisa dihapus.
+- Pemilih bulan di saringan daftar dan di Buku Agenda diganti dari kolom `type="month"` (yang tampil sebagai garis putus-putus "----------" saat kosong) menjadi dua pilihan yang selalu terbaca: nama bulan (Januari sampai Desember) dan tahun (dua tahun sebelum sampai satu tahun sesudah tahun berjalan). Memilih bulan tanpa tahun memakai tahun berjalan; pilihan tahun nonaktif sampai bulan dipilih; di Buku Agenda pemilih bulan nonaktif bila mode bukan "Per Bulan Ini".
+- Tombol batal pada chip saringan diganti modern: chip kini pil hijau tint dengan tombol bulat 18px berisi ikon X SVG (sebelumnya chip tidak punya gaya sama sekali dan tombolnya kotak default browser berisi karakter "×").
+
 ## [1.4.5] - 2026-11-12
 
 ### Diubah
