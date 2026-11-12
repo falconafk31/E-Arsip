@@ -95,7 +95,7 @@ function tglPanjangIni() { const d = new Date(); return d.getDate() + " " + BULA
 function fmtTgl(t) { if (!t) return "-"; const p = String(t).slice(0, 10).split("-"); return p.length === 3 ? p[2] + " " + BULAN_ID[parseInt(p[1], 10) - 1].slice(0, 3) + " " + p[0] : t; }
 const ZONA_OFSET = { WIB: 7, WITA: 8, WIT: 9 };
 function zonaAktif() { return ZONA_OFSET[SETTINGS.zona_waktu] !== undefined ? SETTINGS.zona_waktu : "WIB"; }
-function fmtJam(ts) { if (!ts) return "-"; const d = new Date(String(ts).replace(" ", "T") + "Z"); if (isNaN(d)) return esc(ts); const l = new Date(d.getTime() + ZONA_OFSET[zonaAktif()] * 3600 * 1000); return l.getUTCDate() + " " + BULAN_ID[l.getUTCMonth()] + " " + l.getUTCFullYear() + ", " + String(l.getUTCHours()).padStart(2, "0") + "." + String(l.getUTCMinutes()).padStart(2, "0") + " " + zonaAktif(); }
+function fmtJam(ts) { if (!ts) return "-"; const t = String(ts).trim(); const d = new Date(t.includes("T") ? (t.endsWith("Z") ? t : t + "Z") : t.replace(" ", "T") + "Z"); if (isNaN(d)) return esc(ts); const l = new Date(d.getTime() + ZONA_OFSET[zonaAktif()] * 3600 * 1000); return l.getUTCDate() + " " + BULAN_ID[l.getUTCMonth()] + " " + l.getUTCFullYear() + ", " + String(l.getUTCHours()).padStart(2, "0") + "." + String(l.getUTCMinutes()).padStart(2, "0") + " " + zonaAktif(); }
 function thUrut(label, key, st, extra) { const on = st.sort === key; const ik = on ? ic(st.dir === "asc" ? "arr-up" : "arr-down") : ic("arr-both"); return '<th data-sk="' + key + '" title="Klik untuk urutkan"' + (extra || "") + ">" + label + '<span class="sic ' + (on ? "on" : "dim") + '">' + ik + "</span></th>"; }
 function ikatUrut(st, muatUlang) { $$("th[data-sk]").forEach((th) => (th.onclick = () => { if (st.sort === th.dataset.sk) st.dir = st.dir === "asc" ? "desc" : "asc"; else { st.sort = th.dataset.sk; st.dir = "asc"; } if ("page" in st) st.page = 1; muatUlang(); })); }
 function labelTenggat(iso) { if (!iso) return null; const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); const t = new Date(String(iso).slice(0, 10) + "T00:00:00"); const hari = Math.round((t - today) / 86400000); if (hari < 0) return { t: "Terlambat " + (-hari) + " hari", k: "dg" }; if (hari === 0) return { t: "Jatuh tempo hari ini", k: "dg" }; if (hari === 1) return { t: "Jatuh tempo besok", k: "wn" }; if (hari <= 7) return { t: hari + " hari lagi", k: "wn" }; return null; }
@@ -189,7 +189,7 @@ function renderShell() {
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.5.0</div></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.5.1</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => {
