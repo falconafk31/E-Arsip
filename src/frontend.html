@@ -189,7 +189,7 @@ function renderShell() {
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.5.4</div></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.5.5</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => {
@@ -218,7 +218,7 @@ async function segarLencana() {
   } catch (e) {}
 }
 document.addEventListener("click", (e) => { const m = $("#aMenu"); if (m && !m.hidden && !(e.target.closest && e.target.closest(".akun"))) m.hidden = true; });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") { const m = $("#aMenu"); if (m) m.hidden = true; const mr = $("#modalRoot"); if (mr && mr.innerHTML.trim() !== "") mr.innerHTML = ""; $$(".pick-list").forEach((el) => el.remove()); } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { const m = $("#aMenu"); if (m) m.hidden = true; const mr = $("#modalRoot"); if (mr && mr.innerHTML.trim() !== "") mr.innerHTML = ""; $$(".pick-list").forEach((el) => el.remove()); $$(".sheet").forEach((el) => { el.hidden = true; }); const _lb = $("#bLainnya"); if (_lb) _lb.setAttribute("aria-expanded", "false"); } });
 function renderTop() {
   $("#topbar").innerHTML = '<div class="acts"><button class="hb" id="hbBtn" aria-label="Buka menu">' + ic("menu") + '<span class="hdot" id="hDot" hidden></span></button><span class="crumb"><span class="cinst">' + esc(namaInstansi()) + '</span><span class="sep">/</span><b>' + esc(JUDUL[cur.p] || "") + "</b></span></div>"
     + '<form class="gcari" id="gCari"><input id="gQ" placeholder="Cari surat masuk atau keluar..." autocomplete="off"></form>'
@@ -238,6 +238,7 @@ function go(p, arg) {
   const RUTE = ["beranda", "masuk", "keluar", "disposisi", "agenda", "rekap", "sampah", "pengaturan", "audit", "guru", "detail", "cari"];
   if (RUTE.includes(p)) { let h = "#/" + p; if (p === "detail" && arg != null) h += "/" + encodeURIComponent(arg); if (p === "cari" && arg && arg.q) h += "/" + encodeURIComponent(arg.q); try { history.replaceState(null, "", h); } catch (e) {} }
   document.body.classList.remove("nav");
+  document.body.classList.remove("adabar");
   renderTop();
   segarLencana();
   const nk = p === "detail" && window._detailJenis ? window._detailJenis : p;
@@ -247,8 +248,8 @@ function go(p, arg) {
   const mn = $("#main"); if (mn) { mn.classList.remove("vin"); void mn.offsetWidth; mn.classList.add("vin"); }
   window.scrollTo(0, 0);
 }
-function headPage(judul, sub, aksiHtml) {
-  return '<div class="phd"><div><h1>' + esc(judul) + "</h1><p>" + esc(sub) + '</p></div><div class="acts">' + (aksiHtml || "") + "</div></div>";
+function headPage(judul, sub, aksiHtml, actsCls, atasHtml) {
+  return (atasHtml || "") + '<div class="phd"><div><h1>' + esc(judul) + "</h1><p>" + esc(sub) + '</p></div><div class="acts' + (actsCls ? " " + actsCls : "") + '">' + (aksiHtml || "") + "</div></div>";
 }
 function kosong(teks, sub, ikon, cta) { return '<div class="em">' + ic(ikon || "inbox") + "<b>" + esc(teks) + "</b><span>" + esc(sub || "") + "</span>" + (cta ? cta : "") + "</div>"; }
 
@@ -448,12 +449,24 @@ async function viewDetail(id) {
       + '<form id="formDisp" style="border-top:1px solid var(--bd);padding-top:16px"><div class="fg"><div class="fl"><label>Diteruskan Kepada <span class="rq2">*</span></label><input id="diKepada" required placeholder="Nama atau jabatan penerima" list="dlGuru"><datalist id="dlGuru"></datalist></div><div class="fl"><label>Batas Waktu</label><input id="diBatas" type="date"></div><div class="fl w"><label>Instruksi</label><textarea id="diInstruksi" placeholder="Isi instruksi disposisi"></textarea></div></div><button class="btn" type="submit">' + ic("send") + "Kirim Disposisi</button></form>"
       + "</div></div>";
   }
+  const cetakDiBar = s.jenis === "masuk" && !bisaUbah;
+  let barBtn = "";
+  if (s.jenis === "masuk" && bisaUbah) barBtn += '<button class="btn" data-bar="tambah">' + ic("send") + "Tambah Disposisi</button>";
+  else if (cetakDiBar) barBtn += '<button class="btn sec" data-bar="cetak">' + ic("print") + "Cetak</button>";
+  if (bisaUbah) barBtn += s.jenis === "keluar" ? '<button class="btn" data-bar="ubah">' + ic("edit") + "Ubah Surat</button>" : '<button class="btn sec" data-bar="ubah">' + ic("edit") + "Ubah</button>";
+  barBtn += '<button class="btn sec ico" id="bLainnya" aria-label="Aksi lainnya" aria-expanded="false">&#8943;</button>';
+  const barHtml = '<div class="bbar">' + barBtn + '</div>';
+  let sheetBtn = '<div class="grab"></div>';
+  sheetBtn += '<button type="button" data-sheet="kembali">' + ic("back") + "Kembali ke Daftar</button>";
+  if (s.jenis === "masuk" && !cetakDiBar) sheetBtn += '<button type="button" data-sheet="cetak">' + ic("print") + "Cetak Lembar Disposisi</button>";
+  if (bisaUbah) sheetBtn += '<button type="button" class="red" data-sheet="sampah">' + ic("trash") + "Pindah ke Sampah</button>";
+  const sheetHtml = '<div class="sheet" id="sheetDetail" hidden>' + sheetBtn + '</div>';
   $("#main").innerHTML = headPage(s.nomor_surat, (s.jenis === "masuk" ? "Surat Masuk" : "Surat Keluar") + " - Agenda " + (s.nomor_agenda || "-"),
-    '<button class="btn sec" id="bKembali">' + ic("back") + "Kembali</button>"
+    ((s.jenis === "masuk" && bisaUbah) ? '<button class="btn" id="bTambahDisp">' + ic("send") + "Tambah Disposisi</button>" : "")
     + (bisaUbah ? '<button class="btn sec" id="bUbah">' + ic("edit") + "Ubah Surat</button>" : "")
-    + ((s.jenis === "masuk" && bisaUbah) ? '<button class="btn sec" id="bTambahDisp">' + ic("send") + "Tambah Disposisi</button>" : "")
-    + (bisaUbah ? '<button class="btn dgo" id="bSampah">' + ic("trash") + "Pindah ke Sampah</button>" : "")
-    + (s.jenis === "masuk" ? '<a class="btn sec" href="/cetak/disposisi/' + s.id + '" target="_blank">' + ic("print") + "Cetak Lembar Disposisi</a>" : ""))
+    + (s.jenis === "masuk" ? '<a class="btn sec" id="bCetak" href="/cetak/disposisi/' + s.id + '" target="_blank">' + ic("print") + "Cetak Lembar Disposisi</a>" : "")
+    + (bisaUbah ? '<button class="btn danger-txt" id="bSampah">' + ic("trash") + "Pindah ke Sampah</button>" : ""), "sembunyi-hp",
+    '<button class="backlink sembunyi-hp" id="bKembali">' + ic("back") + "Kembali</button>")
     + '<div class="card"><div class="ch"><h2>1. Informasi</h2>' + (s.jenis === "masuk" ? badgeStatus(s.status_disposisi) : '<span class="bd ok">Terkirim</span>') + '</div><div class="cb"><dl class="dl">'
     + baris.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").join("") + "</dl>" + penugasanHtml + turunanHtml + "</div></div>"
     + '<div class="card mt"><div class="ch"><h2>2. Berkas</h2>' + badgeSifat(s.sifat) + '<span class="bd gr">' + berkasUtama.length + " / 5 berkas</span></div><div class=\"cb\">"
@@ -464,11 +477,16 @@ async function viewDetail(id) {
     + (s.jenis === "keluar" ? '<h3 class="sh" style="margin-top:16px">Lampiran Pendukung</h3>' + lampPend + '<p class="mu" style="margin:10px 0">Bukti kegiatan dari surat ini, misalnya foto kegiatan dan daftar hadir. Gunakan nama berkas yang jelas, contoh: Daftar Hadir - Rapat Wali Murid.pdf</p>' + (bisaUbah ? '<button class="dz" id="bUploadPendukung"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Tambah Lampiran Pendukung</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas" + (r2Aktif ? "" : " - upload belum aktif") + "</span></button>" : "") : "")
     + "</div></div>"
     + disp
-    + '<div class="card mt"><div class="ch"><h2>4. Riwayat</h2></div><div class="cb">' + riwayatSurat(s, d.disposisi, d.lampiran) + "</div></div>";
+    + '<div class="card mt"><div class="ch"><h2>4. Riwayat</h2></div><div class="cb">' + riwayatSurat(s, d.disposisi, d.lampiran) + "</div></div>" + barHtml + sheetHtml;
   $("#bKembali").onclick = () => go(s.jenis);
   const bu = $("#bUbah"); if (bu) bu.onclick = () => go("form", { id: s.id });
   const btd = $("#bTambahDisp"); if (btd) btd.onclick = () => { const f = $("#formDisp"); if (f) { f.scrollIntoView({ behavior: "smooth", block: "center" }); const k = $("#diKepada"); if (k) k.focus({ preventScroll: true }); } };
   const bs = $("#bSampah"); if (bs) bs.onclick = () => konfirmasi("Pindah ke Sampah?", "Surat <b>" + esc(s.nomor_surat) + "</b> akan dipindah ke Tempat Sampah dan bisa dipulihkan dalam 30 hari.", "Pindah ke Sampah", async () => { try { await api("/api/surat/" + s.id, { method: "DELETE" }); const jns = s.jenis, sid = s.id; go(jns); toastAksi("Surat dipindahkan ke Tempat Sampah", "Batalkan", async () => { await api("/api/surat/" + sid + "/pulih", { method: "POST" }); toast("Surat dipulihkan"); muatList(jns); }); } catch (e) { toast(e.message, true); } });
+  document.body.classList.add("adabar");
+  $$("[data-bar]").forEach((b) => b.onclick = () => { const k = b.dataset.bar; if (k === "tambah") { const t = $("#bTambahDisp"); if (t) t.click(); } else if (k === "ubah") { const t = $("#bUbah"); if (t) t.click(); } else if (k === "cetak") { const t = $("#bCetak"); if (t) t.click(); } });
+  const lb = $("#bLainnya"); if (lb) lb.onclick = (e) => { e.stopPropagation(); const sh = $("#sheetDetail"); if (!sh) return; sh.hidden = !sh.hidden; lb.setAttribute("aria-expanded", String(!sh.hidden)); };
+  $$("#sheetDetail [data-sheet]").forEach((b) => b.onclick = () => { const k = b.dataset.sheet; const sh = $("#sheetDetail"); if (sh) sh.hidden = true; if (lb) lb.setAttribute("aria-expanded", "false"); if (k === "kembali") { const t = $("#bKembali"); if (t) t.click(); } else if (k === "cetak") { const t = $("#bCetak"); if (t) t.click(); } else if (k === "sampah") { const t = $("#bSampah"); if (t) t.click(); } });
+  if (!window._sheetTerpasang) { window._sheetTerpasang = true; document.addEventListener("click", (e) => { if (!e.target.closest || (!e.target.closest(".bbar") && !e.target.closest(".sheet"))) { $$(".sheet").forEach((el) => { el.hidden = true; }); const l = $("#bLainnya"); if (l) l.setAttribute("aria-expanded", "false"); } }); }
   const up = $("#bUpload"); if (up) up.onclick = () => $("#fileLampiran").click();
   $("#fileLampiran").onchange = async (e) => {
     const files = [...e.target.files]; e.target.value = "";
@@ -531,7 +549,7 @@ async function viewForm(arg) {
   formFiles = []; window._guruDimuat = false;
   const klasOpts = ['<option value="">- Pilih klasifikasi -</option>'].concat(klasList.map((k) => '<option ' + (s && s.klasifikasi === k.nama ? "selected" : "") + ">" + esc(k.nama) + "</option>")).join("");
   $("#main").innerHTML = headPage(id ? "Ubah Surat" : "Tambah Surat", id ? "Perubahan tersimpan sebagai data surat yang sama" : "Isi data surat, berkas bisa diunggah langsung atau menyusul",
-    '<button class="btn sec" id="bBatal">' + ic("back") + "Batal</button>")
+    "", "sembunyi-hp", '<button class="backlink sembunyi-hp" id="bBatal">' + ic("back") + "Batal</button>")
     + '<form id="formSurat"><div class="steps"><div class="sp on"><i>1</i>Data Surat</div><div class="sp"><i>2</i>Berkas Surat</div><div class="sp"><i>3</i>Simpan</div></div>'
     + '<p class="mu" style="margin:2px 2px 12px">Tanda <span class="rq2">*</span> wajib diisi.</p><div class="card"><div class="fs"><h3>Identitas Surat</h3><div class="fg">'
     + '<div class="fl"><label>Jenis Surat</label><select id="fsJenis"' + (id ? " disabled" : "") + '>' + ["masuk", "keluar"].map((j) => '<option value="' + j + '" ' + (jenis === j ? "selected" : "") + ">" + (j === "masuk" ? "Surat Masuk" : "Surat Keluar") + "</option>").join("") + "</select></div>"
@@ -554,7 +572,8 @@ async function viewForm(arg) {
     + '<div class="fl w"><label>Guru / Staff yang Ditugaskan</label><div class="sr">' + ic("search") + '<input id="fsGuruCari" placeholder="Ketik nama guru atau staff..." autocomplete="off"></div><div class="pick" id="fsGuruPick"></div><div class="chips" id="fsGuruChip"></div><small class="mu">Guru yang dipilih tampil sebagai chip; ketuk &#215; untuk menghapus, ketik lagi untuk menambah.</small></div>'
     + '</div></div><div class="fs"><h3>Berkas Surat</h3>'
     + '<button type="button" class="dz" id="fsDrop"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Pilih berkas surat</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas, maks 5 berkas" + (r2Aktif ? "" : " - upload belum aktif") + '</span></button><ul class="fi2" id="fsFileList"></ul><p class="mu" style="margin-top:8px">Berkas dapat dilengkapi menyusul dari halaman Detail. Lampiran pendukung surat keluar (foto kegiatan, daftar hadir) juga ditambahkan dari halaman Detail.</p>'
-    + '</div><div class="fs"><h3>Keterangan</h3><div class="fg"><div class="fl w"><label>Catatan</label><textarea id="fsKet" placeholder="Catatan tambahan tentang surat ini">' + esc(s ? s.keterangan || "" : "") + '</textarea></div></div></div><div class="cb" style="border-top:1px solid var(--bd)"><div class="acts end"><button type="button" class="btn sec" id="bBatal2">Batal</button><button class="btn" type="submit" id="fsSimpan">' + ic("check") + (id ? "Simpan Perubahan" : "Simpan Surat") + "</button></div></div></div></form>";
+    + '</div><div class="fs"><h3>Keterangan</h3><div class="fg"><div class="fl w"><label>Catatan</label><textarea id="fsKet" placeholder="Catatan tambahan tentang surat ini">' + esc(s ? s.keterangan || "" : "") + '</textarea></div></div></div><div class="cb fbar" style="border-top:1px solid var(--bd)"><div class="acts end"><button type="button" class="btn sec" id="bBatal2">Batal</button><button class="btn" type="submit" id="fsSimpan">' + ic("check") + (id ? "Simpan Perubahan" : "Simpan Surat") + "</button></div></div></div></form>";
+  document.body.classList.add("adabar");
   const syncJenis = () => { const j = $("#fsJenis").value; $("#wrapAsal").style.display = j === "masuk" ? "" : "none"; $("#wrapTujuan").style.display = j === "keluar" ? "" : "none"; $("#wrapTtd").style.display = j === "keluar" ? "" : "none"; const wp = $("#wrapPenugasan"); if (wp) wp.style.display = j === "keluar" ? "" : "none"; };
   $("#fsJenis").onchange = syncJenis; syncJenis();
   async function muatOpsiPenugasan() {
