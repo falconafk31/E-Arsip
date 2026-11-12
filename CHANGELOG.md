@@ -2,6 +2,13 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.4.4] - 2026-11-12
+
+### Diubah
+
+- Variasi hirarki warna dengan basis EMISGTK tetap dipertahankan (disetujui Hades lewat mockup, menggantikan usulan Terra P1/P2 yang ditolak): permukaan tint (baris saringan, kepala tabel, sel ringkasan, zona unggah) menjadi #EAF3ED, garis dan border menjadi #CFDED4, teks utama #0F241B dan teks sekunder #4E6359 (sedikit lebih dalam, tetap hijau tua). Teks pudar, primer, emas token, merah semantik, dan gradasi bilah sisi teal-biru tidak berubah.
+- Angka terlambat di kartu Disposisi Beranda kini berwarna emas #C9A227 (kelas .gold2, hanya bila ada yang terlambat), dan kepala kartu "Perlu Perhatian" kini memakai tautan teks biru "Lihat semua" #2A6DA6 (diambil dari gradasi bilah sisi, kelas .lk2) yang membuka menu Disposisi; tombol "Lihat Semua Disposisi" di bawah kartu dihapus mengikuti mockup yang disetujui. Lencana merah "N terlambat" di kepala kartu tetap seperti semula.
+
 ## [1.4.3] - 2026-11-12
 
 ### Diubah
