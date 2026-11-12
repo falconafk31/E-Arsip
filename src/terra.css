@@ -362,3 +362,17 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--p);vertical-align
   .top .hb{width:44px;height:44px}
   .dz{min-height:60px}
 }
+
+/* 1.5.4 - pemilih cari dropdown + chip (penugasan) */
+.pick{position:relative}
+.pick-list{position:absolute;left:0;right:0;top:6px;background:#fff;border:1px solid var(--bd2);border-radius:8px;box-shadow:0 10px 24px rgba(15,36,27,.16);overflow:hidden;z-index:20}
+.pick-list button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;border:0;background:#fff;padding:10px 12px;font:inherit;text-align:left;cursor:pointer;border-bottom:1px solid var(--sf2)}
+.pick-list button:last-child{border-bottom:0}
+.pick-list button:hover{background:var(--ps)}
+.pick-list b{font-size:13.5px}
+.pick-list small{color:var(--tm);font-size:12px}
+.pick-list .habis{padding:9px 12px;color:var(--tm);font-size:12px;background:var(--sf2)}
+.pilih-satu{display:flex;align-items:center;gap:10px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-top:10px}
+.pilih-satu b{font-size:13.5px}
+.pilih-satu small{display:block;color:var(--tm);font-size:12px}
+.pilih-satu .x{margin-left:auto;width:26px;height:26px;border:0;border-radius:50%;background:#fff;border:1px solid var(--bd2);color:var(--tm);cursor:pointer;flex:none;font-size:16px;line-height:1}

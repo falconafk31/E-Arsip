@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.4] - 2026-11-12
+
+### Diubah
+
+- Seksi Penugasan di formulir surat keluar memakai pemilih cari (dropdown + chip): "Guru / Staff yang Ditugaskan" kini kotak cari yang menampilkan 10 hasil teratas dari data guru aktif; guru yang dipilih tampil sebagai chip (nama + jabatan, tombol hapus) dan bisa tambah banyak orang; "Menindaklanjuti Surat Masuk" kini kotak cari yang bertanya ke server saat mengetik (minimal 2 huruf, 10 hasil teratas) menggantikan dropdown yang memuat sampai 500 surat masuk sekaligus. Saat mengedit, guru dan surat induk yang sudah tersimpan tampil langsung sebagai chip. Tanpa perubahan backend (pencarian memakai endpoint /api/guru dan /api/surat yang sudah ada); daftar centang guru dan dropdown induk lama dihapus.
+
 ## [1.5.3] - 2026-11-12
 
 ### Ditambahkan
