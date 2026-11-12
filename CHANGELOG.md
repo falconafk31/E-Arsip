@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.4.8] - 2026-11-12
+
+### Diperbaiki
+
+- Tombol aksi pada toast ("Lihat Sampah" sesudah hapus massal, "Batalkan" sesudah hapus tunggal) kini bisa diketuk. Sebelumnya `.ts` memakai `pointer-events: none` dan `.ts.show` tidak mengembalikannya, sehingga ketukan pada tombol toast menembus ke daftar di bawahnya.
+
 ## [1.4.7] - 2026-11-12
 
 ### Diperbaiki
