@@ -405,3 +405,12 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--p);vertical-align
   .fbar{position:sticky;bottom:0;z-index:30;background:#fff;box-shadow:0 -4px 16px rgba(15,36,27,.08)}
   body.adabar .ts{bottom:92px}
 }
+
+/* 1.5.6 - wizard formulir 3 layar */
+.layar{display:none}
+.layar.aktif{display:block}
+.sp.done{border-color:var(--p);color:var(--tx)}
+.sp.done i{background:var(--p)}
+.sp.bisa{cursor:pointer}
+.sp.tkunci{opacity:.55;cursor:not-allowed}
+@media (max-width:720px){.pj{display:none}.fbar .btn{white-space:nowrap}}

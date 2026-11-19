@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.6] - 2026-11-19
+
+### Diubah
+
+- Formulir Tambah/Ubah Surat kini wizard 3 layar (berlaku Surat Masuk dan Surat Keluar): layar 1 Data Surat (Identitas + Klasifikasi dan Penempatan + Penugasan untuk surat keluar), layar 2 Berkas Surat (kotak unggah + daftar berkas), layar 3 Simpan (Periksa Kembali berupa ringkasan data yang diisi + Catatan + tombol Simpan). Penanda langkah 1-2-3 kini berfungsi: langkah yang sudah dilewati jadi centang hijau dan bisa diketuk untuk kembali, langkah yang belum sampai terkunci. Tombol Lanjut dari layar 1 menahan bila kolom wajib (Nomor Surat, Tanggal Surat, Tanggal Agenda, Perihal) masih kosong; penjaga yang sama berjalan saat Simpan ditekan. Formulir memakai novalidate supaya validasi bawaan browser tidak menghalangi penjaga wizard saat bidang wajib di layar lain sedang tersembunyi. Berkas boleh kosong (menyusul dari halaman Detail). Di HP tombol bawah tetap menempel di layar dan label "Lanjut ke Berkas/Simpan" dipendekkan jadi "Lanjut". Alur simpan (termasuk peringatan surat ganda) dan semua id bidang tidak berubah.
+
 ## [1.5.5] - 2026-11-12
 
 ### Diubah
