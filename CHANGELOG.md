@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.8] - 2026-11-19
+
+### Ditambahkan
+
+- Kartu "Nomor Surat Keluar Terakhir" di Beranda, varian A Minimal (rencana Terra, disetujui Hades): nomor surat keluar lengkap berdasarkan tanggal surat terakhir, tanggal surat, dan tautan "Lihat detail"; ditempatkan sebagai blok sebelum "Surat Terbaru". Backend menambah satu field `surat_keluar_terakhir` di /api/dashboard (terakhir menurut tanggal_surat lalu dibuat_pada; nomor Rahasia tetap disamarkan lewat maskSurat). Bila belum ada surat keluar, kartu menampilkan keadaan kosong. Tanpa saran nomor berikutnya dan tanpa peringatan di tahap awal.
+
 ## [1.5.7] - 2026-11-19
 
 ### Ditambahkan

@@ -649,7 +649,7 @@ export default {
         const ym = todayWIB().slice(0, 7);
         const [bAwal, bAkhir] = rentangBulan(ym);
         const t = (sql, ...args) => env.DB.prepare(sql).bind(...args).first().then(r => r.c);
-        const [perBulan, terbaru, perhatian, masukBulanIni, keluarBulanIni, totalMasuk, totalKeluar, disposisiTerbuka, disposisiTerlambat, tanpaScan, tanpaScanMasuk, tanpaScanKeluar] = await Promise.all([
+        const [perBulan, terbaru, perhatian, masukBulanIni, keluarBulanIni, totalMasuk, totalKeluar, disposisiTerbuka, disposisiTerlambat, tanpaScan, tanpaScanMasuk, tanpaScanKeluar, keluarTerakhir] = await Promise.all([
           env.DB.prepare("SELECT substr(tanggal_agenda,6,2) bln, COUNT(*) total FROM surat WHERE terhapus_pada IS NULL AND tanggal_agenda >= date('now','-5 months','start of month') GROUP BY substr(tanggal_agenda,1,7) ORDER BY substr(tanggal_agenda,1,7)").all(),
           env.DB.prepare("SELECT s.*, (SELECT COUNT(*) FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat') file_count FROM surat s WHERE s.terhapus_pada IS NULL ORDER BY s.id DESC LIMIT 8").all(),
           env.DB.prepare("SELECT s.perihal, s.nomor_agenda, d.kepada, d.batas_waktu, d.status sts FROM disposisi d JOIN surat s ON s.id=d.surat_id WHERE s.terhapus_pada IS NULL AND d.status!='Selesai' ORDER BY (d.batas_waktu IS NULL), d.batas_waktu LIMIT 5").all(),
@@ -662,6 +662,7 @@ export default {
           t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
           t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND s.jenis='masuk' AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
           t("SELECT COUNT(*) c FROM surat s WHERE s.terhapus_pada IS NULL AND s.jenis='keluar' AND NOT EXISTS (SELECT 1 FROM lampiran l WHERE l.surat_id=s.id AND l.jenis_berkas='berkas_surat')"),
+          env.DB.prepare("SELECT id, nomor_surat, tanggal_surat, perihal, tujuan FROM surat WHERE terhapus_pada IS NULL AND jenis='keluar' ORDER BY tanggal_surat DESC, dibuat_pada DESC LIMIT 1").all(),
         ]);
         return json({
           masuk_bulan_ini: masukBulanIni,
@@ -673,7 +674,7 @@ export default {
           tanpa_scan: tanpaScan,
           tanpa_scan_masuk: tanpaScanMasuk,
           tanpa_scan_keluar: tanpaScanKeluar,
-          per_bulan: perBulan.results, terbaru: terbaru.results.map(r => maskSurat(user, r)), perhatian: perhatian.results,
+          per_bulan: perBulan.results, terbaru: terbaru.results.map(r => maskSurat(user, r)), perhatian: perhatian.results, surat_keluar_terakhir: maskSurat(user, keluarTerakhir.results[0]) || null,
         });
       }
       if (path === "/api/surat" && req.method === "GET") return listSurat(req, env, user);
