@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.7] - 2026-11-19
+
+### Ditambahkan
+
+- Favicon logo Kemenag (perintah Hades "Favicon ganti" + tautan SVG Drive): dua tautan data URI di kepala halaman, SVG sebagai utama (Chrome/Firefox) dan PNG 180x180 sebagai cadangan (Safari belum mendukung favicon SVG). Sebelumnya aplikasi tidak punya favicon sama sekali (permintaan /favicon.ico dibalas HTML aplikasi). Tanpa perubahan backend; berkas sumber di app/favicon-kemenag.svg dan app/favicon-kemenag-180.png.
+
 ## [1.5.6] - 2026-11-19
 
 ### Diubah
