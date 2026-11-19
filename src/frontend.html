@@ -191,7 +191,7 @@ function renderShell() {
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.5.7</div></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.5.8</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => {
@@ -257,6 +257,13 @@ function kosong(teks, sub, ikon, cta) { return '<div class="em">' + ic(ikon || "
 
 /* ---------- beranda ---------- */
 function pilPerhatian(x) { const tl = terlambatDisp(x); const tgl = x.batas_waktu ? " · " + fmtTgl(x.batas_waktu) : ""; if (tl) return '<span class="bd dg">' + ic("warning") + "Terlambat" + tgl + "</span>"; if (x.sts === "Diproses") return '<span class="bd in">' + ic("clock") + "Diproses" + tgl + "</span>"; return '<span class="bd wn">' + ic("clock") + "Belum" + tgl + "</span>"; }
+function kartuNomorKeluar(d) {
+  const k = d.surat_keluar_terakhir;
+  let isi;
+  if (!k) isi = kosong("Belum ada surat keluar", "Surat keluar yang dicatat akan tampil di sini.", "outbox", "");
+  else isi = '<div class="no-keluar">' + esc(k.nomor_surat || "Nomor belum diisi") + '</div><small class="mt2">Tanggal surat: ' + fmtTgl(k.tanggal_surat) + '</small><div style="margin-top:10px"><a class="lk2" data-detail="' + k.id + '" data-jenis="keluar">Lihat detail ›</a></div>';
+  return '<div class="card mt"><div class="ch"><h2>Nomor Surat Keluar Terakhir</h2></div><div class="cb">' + isi + "</div></div>";
+}
 async function viewBeranda() {
   $("#main").innerHTML = headPage("Beranda", "Memuat ringkasan...") + '<div class="card cb">' + rangka(5) + "</div>";
   let d; try { d = await api("/api/dashboard"); } catch (e) { $("#main").innerHTML = headPage("Beranda", "") + '<div class="card cb er">' + esc(e.message) + "</div>"; return; }
@@ -281,6 +288,7 @@ async function viewBeranda() {
     + '<div class="g2 mt"><div class="card"><div class="ch"><h2>Aktivitas Surat 6 Bulan Terakhir</h2><span class="lgd">Total surat per bulan</span></div><div class="cb" style="padding-top:4px">' + chart + "</div></div>"
     + '<div class="card"><div class="ch"><h2>Perlu Perhatian</h2><a class="lk2" id="bSemuaDisp">Lihat semua ›</a></div><div>' + peringatan + '</div></div>'
     + "</div>"
+    + kartuNomorKeluar(d)
     + '<div class="card mt"><div class="ch"><h2>Surat Terbaru</h2><button class="btn sec sm" id="bSemuaSurat">' + ic("inbox") + "Lihat Semua</button></div>"
     + (d.terbaru.length ? '<div class="tw"><table class="a"><thead><tr><th style="width:52px">No.</th><th>Jenis</th><th>Nomor / Perihal</th><th>Asal / Tujuan</th><th>Tanggal</th><th>Jumlah Berkas</th><th>Status</th></tr></thead><tbody>'
       + d.terbaru.map((r, idx) => '<tr class="rw" data-detail="' + r.id + '" data-jenis="' + r.jenis + '"><td>' + (idx + 1) + "</td><td>" + (r.jenis === "masuk" ? '<span class="bd pr">Masuk</span>' : '<span class="bd in">Keluar</span>') + "</td><td><b>" + esc(ringkas(r.perihal)) + "</b><small>" + (r.nomor_agenda ? "Agenda " + (r.jenis === "masuk" ? "Masuk " : "Keluar ") + esc(r.nomor_agenda) : "Belum diagendakan") + "</small></td><td>" + esc(ringkas(r.asal || r.tujuan || "-")) + "</td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td>" + (r.file_count || 0) + ' berkas</td><td>' + (r.jenis === "masuk" ? badgeStatus(r.status_disposisi) : '<span class="bd ok">Terkirim</span>') + "</td></tr>").join("")
