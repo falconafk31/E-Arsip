@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.9] - 2026-11-26
+
+### Diperbaiki
+
+- Tabrakan kelas `.sheet` di Pengaturan (laporan Hades 26 Nov 2026): pratinjau kop di tab Kop Surat Custom dan contoh blok tanda tangan di tab Pejabat Penanda Tangan ikut memakai gaya lembar aksi bawah 1.5.5 (position:fixed, bottom:66px) sehingga melayang menutupi formulir, dan ikut tersembunyi oleh handler klik-luar/Esc lembar aksi begitu pengguna mengklik kolom mana pun. Lembar dokumen kini memakai kelas sendiri `.lembar`; lembar aksi detail (`#sheetDetail`) tidak berubah.
+
 ## [1.5.8] - 2026-11-19
 
 ### Ditambahkan
