@@ -2,6 +2,12 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.5.10] - 2026-11-26
+
+### Diubah
+
+- Perihal di daftar Surat Masuk dan Surat Keluar kini 1 baris + ... (perintah Hades 26 Nov 2026: kolom Perihal terlalu besar). Teks lengkap tetap tampil di halaman detail, dan bisa dibaca lewat tooltip saat kursor diarahkan ke perihal yang terpotong.
+
 ## [1.5.9] - 2026-11-26
 
 ### Diperbaiki
