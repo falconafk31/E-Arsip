@@ -105,7 +105,7 @@ let toastTimer = null;
 function toastAksi(pesan, label, aksi) { const t = $("#toast"); t.innerHTML = "<span>" + esc(pesan) + '</span><button type="button" id="toastBtn">' + esc(label) + "</button>"; t.classList.add("show"); clearTimeout(toastTimer); $("#toastBtn").onclick = async () => { clearTimeout(toastTimer); t.classList.remove("show"); try { await aksi(); } catch (e) { toast(e.message, true); } }; toastTimer = setTimeout(() => t.classList.remove("show"), 9000); }
 function canEditNow() { return me && (me.role === "admin" || me.role === "petugas"); }
 function badgeSifat(s) { return '<span class="sft">' + esc(s || "Biasa") + "</span>"; }
-function badgeStatus(s) { if (s === "Selesai") return '<span class="bd ok">' + ic("check") + "Selesai</span>"; if (s === "Terlambat") return '<span class="bd dg">' + ic("warning") + "Terlambat</span>"; if (s === "Diproses") return '<span class="bd in">' + ic("clock") + "Diproses</span>"; return '<span class="bd wn">' + ic("clock") + "Belum</span>"; }
+function badgeStatus(s) { if (s === "Selesai") return '<span class="bd ok"><i class="dt"></i>Selesai</span>'; if (s === "Terlambat") return '<span class="bd dg"><i class="dt"></i>Terlambat</span>'; if (s === "Diproses") return '<span class="bd in"><i class="dt"></i>Diproses</span>'; return '<span class="bd wn"><i class="dt"></i>Belum</span>'; }
 function terlambatDisp(x) { return x.status !== "Selesai" && x.batas_waktu && x.batas_waktu < todayStr(); }
 function namaInstansi() { return SETTINGS.kop_baris3 || SETTINGS.nama_instansi || "E-Arsip Madrasah"; }
 function inisial(n) { return String(n || "?").split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase(); }
@@ -116,7 +116,7 @@ function renderLogin(err) {
   const lv = $("#loginView"); lv.hidden = false;
   lv.innerHTML = '<div class="lg"><div class="ll"><div class="bm big">' + ic("letterhead") + '</div><h1>E-Arsip</h1><p>Kelola surat masuk, surat keluar, dan disposisi dalam satu aplikasi yang mudah dipakai petugas TU.</p><ul>'
     + "<li>" + ic("inbox") + "<span>Catat surat dengan Nomor Agenda yang rapi dan mudah dicari</span></li>"
-    + "<li>" + ic("disposition") + "<span>Pantau disposisi yang belum selesai dan terlambat</span></li>"
+    + "<li>" + ic("clipboard") + "<span>Pantau disposisi yang belum selesai dan terlambat</span></li>"
     + "<li>" + ic("report") + "<span>Cetak Buku Agenda dan Rekap Tahunan siap tanda tangan</span></li></ul></div>"
     + '<div class="lr"><form class="lc card" id="formLogin"><div><h2>Masuk ke E-Arsip</h2><p class="mu" style="font-size:13px">Gunakan akun petugas dari admin.</p></div>'
     + '<div class="fl"><label>Nama Pengguna</label><input id="liUser" autocomplete="username" required></div>'
@@ -155,9 +155,9 @@ async function keluar() { try { await api("/api/logout", { method: "POST" }); } 
 
 /* ---------- shell ---------- */
 const MENU = [
-  ["UTAMA", [["beranda", "Beranda", "dashboard"], ["masuk", "Surat Masuk", "inbox"], ["keluar", "Surat Keluar", "outbox"], ["disposisi", "Disposisi", "disposition"]]],
+  ["UTAMA", [["beranda", "Beranda", "dashboard"], ["masuk", "Surat Masuk", "inbox"], ["keluar", "Surat Keluar", "send"], ["disposisi", "Disposisi", "clipboard"]]],
   ["LAPORAN", [["agenda", "Buku Agenda", "agenda"], ["rekap", "Rekap Tahunan", "report"]]],
-  ["ADMINISTRASI", [["guru", "Data Guru", "users"], ["sampah", "Tempat Sampah", "trash"], ["pengaturan", "Pengaturan", "settings"]]],
+  ["ADMINISTRASI", [["guru", "Data Guru", "users"], ["sampah", "Tempat Sampah", "trash"], ["pengaturan", "Pengaturan", "sliders"]]],
 ];
 const JUDUL = { beranda: "Beranda", masuk: "Surat Masuk", keluar: "Surat Keluar", detail: "Detail Surat", disposisi: "Disposisi", form: "Tambah Surat", agenda: "Buku Agenda", rekap: "Rekap Tahunan", sampah: "Tempat Sampah", pengaturan: "Pengaturan", audit: "Audit", cari: "Pencarian", guru: "Data Guru" };
 /* ---------- P11 flyout rel ikon tablet ---------- */
@@ -186,12 +186,12 @@ function renderShell() {
   let h = '<div class="br"><div class="bm">' + ic("letterhead") + '</div><div class="bt"><b>E-Arsip</b><small class="nl">' + esc(namaInstansi()) + "</small></div></div>";
   h += '<nav class="sn">';
   for (const [grup, items0] of MENU) {
-    const items = grup === "ADMINISTRASI" && me.role === "admin" ? [...items0, ["audit", "Audit", "eye"]] : items0;
+    const items = grup === "ADMINISTRASI" && me.role === "admin" ? [...items0, ["audit", "Audit", "shield"]] : items0;
     h += '<div class="ng">' + grup + "</div>";
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.5.10</div></div>';
+    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.6.0</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => {
@@ -250,17 +250,17 @@ function go(p, arg) {
   const mn = $("#main"); if (mn) { mn.classList.remove("vin"); void mn.offsetWidth; mn.classList.add("vin"); }
   window.scrollTo(0, 0);
 }
-function headPage(judul, sub, aksiHtml, actsCls, atasHtml) {
-  return (atasHtml || "") + '<div class="phd"><div><h1>' + esc(judul) + "</h1><p>" + esc(sub) + '</p></div><div class="acts' + (actsCls ? " " + actsCls : "") + '">' + (aksiHtml || "") + "</div></div>";
+function headPage(judul, sub, aksiHtml, actsCls, atasHtml, pillsHtml) {
+  return (atasHtml || "") + '<div class="phd"><div><h1>' + esc(judul) + "</h1><p>" + esc(sub) + "</p>" + (pillsHtml || "") + '</div><div class="acts' + (actsCls ? " " + actsCls : "") + '">' + (aksiHtml || "") + "</div></div>";
 }
 function kosong(teks, sub, ikon, cta) { return '<div class="em">' + ic(ikon || "inbox") + "<b>" + esc(teks) + "</b><span>" + esc(sub || "") + "</span>" + (cta ? cta : "") + "</div>"; }
 
 /* ---------- beranda ---------- */
-function pilPerhatian(x) { const tl = terlambatDisp(x); const tgl = x.batas_waktu ? " · " + fmtTgl(x.batas_waktu) : ""; if (tl) return '<span class="bd dg">' + ic("warning") + "Terlambat" + tgl + "</span>"; if (x.sts === "Diproses") return '<span class="bd in">' + ic("clock") + "Diproses" + tgl + "</span>"; return '<span class="bd wn">' + ic("clock") + "Belum" + tgl + "</span>"; }
+function pilPerhatian(x) { const tl = terlambatDisp(x); const tgl = x.batas_waktu ? " · " + fmtTgl(x.batas_waktu) : ""; if (tl) return '<span class="bd dg"><i class="dt"></i>Terlambat' + tgl + "</span>"; if (x.sts === "Diproses") return '<span class="bd in"><i class="dt"></i>Diproses' + tgl + "</span>"; return '<span class="bd wn"><i class="dt"></i>Belum' + tgl + "</span>"; }
 function kartuNomorKeluar(d) {
   const k = d.surat_keluar_terakhir;
   let isi;
-  if (!k) isi = kosong("Belum ada surat keluar", "Surat keluar yang dicatat akan tampil di sini.", "outbox", "");
+  if (!k) isi = kosong("Belum ada surat keluar", "Surat keluar yang dicatat akan tampil di sini.", "send", "");
   else isi = '<div class="no-keluar">' + esc(k.nomor_surat || "Nomor belum diisi") + '</div><small class="mt2">Tanggal surat: ' + fmtTgl(k.tanggal_surat) + '</small><div style="margin-top:10px"><a class="lk2" data-detail="' + k.id + '" data-jenis="keluar">Lihat detail ›</a></div>';
   return '<div class="card mt"><div class="ch"><h2>Nomor Surat Keluar Terakhir</h2></div><div class="cb">' + isi + "</div></div>";
 }
@@ -282,16 +282,16 @@ async function viewBeranda() {
     + '<div class="card" style="margin-bottom:16px"><form class="sr" id="berandaCari" style="width:100%">' + ic("search") + '<input id="berandaQ" placeholder="Cari surat masuk atau keluar: nomor, perihal, asal, tujuan..." autocomplete="off" style="flex:1"></form></div>'
     + '<div class="stats tiga">'
     + '<div class="card st2"><div class="bd2"><div class="top2"><span class="ic2 ci">' + ic("inbox") + '</span><span class="lb2">Surat Masuk</span></div><div class="sn3">' + d.masuk_bulan_ini + '</div><small class="mt2">Bulan ini · total ' + d.total_masuk + '</small></div>' + (d.tanpa_scan_masuk ? '<button class="status2 stin" id="snMasuk">' + ic("upload") + '<span>' + d.tanpa_scan_masuk + ' Berkas Belum Diunggah</span><span class="chev2">›</span></button>' : "") + "</div>"
-    + '<div class="card st2"><div class="bd2"><div class="top2"><span class="ic2 co">' + ic("outbox") + '</span><span class="lb2">Surat Keluar</span></div><div class="sn3">' + d.keluar_bulan_ini + '</div><small class="mt2">Bulan ini · total ' + d.total_keluar + '</small></div>' + (d.tanpa_scan_keluar ? '<button class="status2 stout" id="snKeluar">' + ic("upload") + '<span>' + d.tanpa_scan_keluar + ' Berkas Belum Diunggah</span><span class="chev2">›</span></button>' : "") + "</div>"
-    + '<div class="card st2"><div class="bd2"><div class="top2"><span class="ic2 cd">' + ic("disposition") + '</span><span class="lb2">Disposisi Belum Selesai</span></div><div class="sn3">' + d.disposisi_terbuka + '</div><small class="mt2">Belum selesai · ' + (d.disposisi_terlambat ? '<span class="gold2">' + d.disposisi_terlambat + ' terlambat</span>' : '0 terlambat') + '</small></div></div>'
+    + '<div class="card st2"><div class="bd2"><div class="top2"><span class="ic2 co">' + ic("send") + '</span><span class="lb2">Surat Keluar</span></div><div class="sn3">' + d.keluar_bulan_ini + '</div><small class="mt2">Bulan ini · total ' + d.total_keluar + '</small></div>' + (d.tanpa_scan_keluar ? '<button class="status2 stout" id="snKeluar">' + ic("upload") + '<span>' + d.tanpa_scan_keluar + ' Berkas Belum Diunggah</span><span class="chev2">›</span></button>' : "") + "</div>"
+    + '<div class="card st2"><div class="bd2"><div class="top2"><span class="ic2 cd">' + ic("clipboard") + '</span><span class="lb2">Disposisi Belum Selesai</span></div><div class="sn3">' + d.disposisi_terbuka + '</div><small class="mt2">Belum selesai · ' + (d.disposisi_terlambat ? '<span class="gold2">' + d.disposisi_terlambat + ' terlambat</span>' : '0 terlambat') + '</small></div></div>'
     + "</div>"
     + '<div class="g2 mt"><div class="card"><div class="ch"><h2>Aktivitas Surat 6 Bulan Terakhir</h2><span class="lgd">Total surat per bulan</span></div><div class="cb" style="padding-top:4px">' + chart + "</div></div>"
     + '<div class="card"><div class="ch"><h2>Perlu Perhatian</h2><a class="lk2" id="bSemuaDisp">Lihat semua ›</a></div><div>' + peringatan + '</div></div>'
     + "</div>"
     + kartuNomorKeluar(d)
-    + '<div class="card mt"><div class="ch"><h2>Surat Terbaru</h2><button class="btn sec sm" id="bSemuaSurat">' + ic("inbox") + "Lihat Semua</button></div>"
+    + '<div class="card mt"><div class="ch"><h2>Surat Terbaru</h2><button class="btn sec sm" id="bSemuaSurat">' + ic("chev") + "Lihat Semua</button></div>"
     + (d.terbaru.length ? '<div class="tw"><table class="a"><thead><tr><th style="width:52px">No.</th><th>Jenis</th><th>Nomor / Perihal</th><th>Asal / Tujuan</th><th>Tanggal</th><th>Jumlah Berkas</th><th>Status</th></tr></thead><tbody>'
-      + d.terbaru.map((r, idx) => '<tr class="rw" data-detail="' + r.id + '" data-jenis="' + r.jenis + '"><td>' + (idx + 1) + "</td><td>" + (r.jenis === "masuk" ? '<span class="bd pr">Masuk</span>' : '<span class="bd in">Keluar</span>') + "</td><td><b>" + esc(ringkas(r.perihal)) + "</b><small>" + (r.nomor_agenda ? "Agenda " + (r.jenis === "masuk" ? "Masuk " : "Keluar ") + esc(r.nomor_agenda) : "Belum diagendakan") + "</small></td><td>" + esc(ringkas(r.asal || r.tujuan || "-")) + "</td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td>" + (r.file_count || 0) + ' berkas</td><td>' + (r.jenis === "masuk" ? badgeStatus(r.status_disposisi) : '<span class="bd ok">Terkirim</span>') + "</td></tr>").join("")
+      + d.terbaru.map((r, idx) => '<tr class="rw" data-detail="' + r.id + '" data-jenis="' + r.jenis + '"><td>' + (idx + 1) + "</td><td>" + (r.jenis === "masuk" ? '<span class="bd pr"><i class="dt"></i>Masuk</span>' : '<span class="bd in"><i class="dt"></i>Keluar</span>') + "</td><td><b>" + esc(ringkas(r.perihal)) + "</b><small>" + (r.nomor_agenda ? "Agenda " + (r.jenis === "masuk" ? "Masuk " : "Keluar ") + esc(r.nomor_agenda) : "Belum diagendakan") + "</small></td><td>" + esc(ringkas(r.asal || r.tujuan || "-")) + "</td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td>" + (r.file_count || 0) + ' berkas</td><td>' + (r.jenis === "masuk" ? badgeStatus(r.status_disposisi) : '<span class="bd ok"><i class="dt"></i>Terkirim</span>') + "</td></tr>").join("")
       + "</tbody></table></div><p class=\"scnote\">Geser ke kanan untuk kolom lainnya</p>" : kosong("Belum ada surat", "Surat yang dicatat akan tampil di sini.", "inbox", canEditNow() ? '<button class="btn" id="bTambahKosong">' + ic("plus") + "Tambah Surat Pertama</button>" : ""))
     + "</div>";
   $("#bTambah").onclick = () => go("form");
@@ -368,7 +368,7 @@ async function muatList(jenis) {
   const tc0 = $("#tbCount"); if (tc0) tc0.textContent = d.total + " surat";
   let h = chipsHtml + '<div class="tw"><table class="a"><thead><tr>' + "<th style=\"width:40px\"><input type=\"checkbox\" id=\"selSemua\" aria-label=\"Pilih semua surat\"></th><th style=\"width:52px\">No</th>" + thUrut("Nomor Surat", "nomor", st) + thUrut("Tanggal Agenda", "tanggal", st) + thUrut("Perihal", "perihal", st) + "<th>" + (jenis === "masuk" ? "Asal" : "Tujuan") + "</th>" + thUrut("Klasifikasi", "klasifikasi", st) + thUrut("Sifat", "sifat", st) + thUrut("Status", "status", st) + "<th>Aksi</th></tr></thead><tbody>";
   d.items.forEach((r, idx) => {
-    h += '<tr class="rw" data-id="' + r.id + '"><td><input type="checkbox" class="row-check" data-id="' + r.id + '"' + (st.pilih.has(r.id) ? " checked" : "") + ' aria-label="Pilih surat"></td><td>' + ((st.page - 1) * 25 + idx + 1) + '</td><td><b>' + esc(r.nomor_surat) + "</b><small>Agenda " + esc(r.nomor_agenda || "-") + "</small></td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td><b class='prh1' title='" + esc(r.perihal) + "'>" + esc(ringkas(r.perihal)) + "</b>" + (r.file_count ? '<small>' + r.file_count + ' berkas surat</small>' + (r.pendukung_count ? '<small>' + r.pendukung_count + ' lampiran pendukung</small>' : '') : '<div style="margin-top:4px"><span class="bd dg">' + ic("upload") + 'Berkas belum diunggah</span></div>') + "</td><td>" + esc(ringkas((jenis === "masuk" ? r.asal : r.tujuan) || "-")) + "</td><td>" + esc(r.klasifikasi || "-") + "</td><td>" + badgeSifat(r.sifat) + "</td><td>" + (jenis === "masuk" ? badgeStatus(r.status_disposisi) + (() => { const tg = labelTenggat(r.tenggat); return tg ? '<div style="margin-top:4px"><span class="bd ' + tg.k + '">' + tg.t + "</span></div>" : ""; })() : '<span class="bd ok">Terkirim</span>') + '</td><td><span class="acts" style="justify-content:flex-end">' + (canEditNow() && r2Aktif && !r.file_count ? '<button class="btn sec sm" data-unggah="' + r.id + '">' + ic("upload") + "Unggah</button>" : "") + '<button class="btn lk" data-detail="' + r.id + '">Detail</button></span></td></tr>';
+    h += '<tr class="rw" data-id="' + r.id + '"><td><input type="checkbox" class="row-check" data-id="' + r.id + '"' + (st.pilih.has(r.id) ? " checked" : "") + ' aria-label="Pilih surat"></td><td>' + ((st.page - 1) * 25 + idx + 1) + '</td><td><b>' + esc(r.nomor_surat) + "</b><small>Agenda " + esc(r.nomor_agenda || "-") + "</small></td><td>" + fmtTgl(r.tanggal_agenda) + "</td><td><b class='prh1' title='" + esc(r.perihal) + "'>" + esc(ringkas(r.perihal)) + "</b>" + (r.file_count ? '<small>' + r.file_count + ' berkas surat</small>' + (r.pendukung_count ? '<small>' + r.pendukung_count + ' lampiran pendukung</small>' : '') : '<div style="margin-top:4px"><span class="bd dg">' + ic("fileup") + 'Berkas belum diunggah</span></div>') + "</td><td>" + esc(ringkas((jenis === "masuk" ? r.asal : r.tujuan) || "-")) + "</td><td>" + esc(r.klasifikasi || "-") + "</td><td>" + badgeSifat(r.sifat) + "</td><td>" + (jenis === "masuk" ? badgeStatus(r.status_disposisi) + (() => { const tg = labelTenggat(r.tenggat); return tg ? '<div style="margin-top:4px"><span class="bd ' + tg.k + '">' + tg.t + "</span></div>" : ""; })() : '<span class="bd ok"><i class="dt"></i>Terkirim</span>') + '</td><td><span class="acts" style="justify-content:flex-end">' + (canEditNow() && r2Aktif && !r.file_count ? '<button class="btn sec sm" data-unggah="' + r.id + '">' + ic("upload") + "Unggah</button>" : "") + '<button class="btn lk" data-detail="' + r.id + '">Detail</button></span></td></tr>';
   });
   h += '</tbody></table></div><p class="scnote">Geser ke kanan untuk kolom lainnya</p><div class="pg"><span>Menampilkan ' + d.items.length + " dari " + d.total + " surat</span><span class=\"acts\">"
     + '<button data-pg="' + (st.page - 1) + '" ' + (st.page <= 1 ? "disabled" : "") + ">Sebelumnya</button>"
@@ -421,47 +421,47 @@ async function viewDetail(id) {
   const berkasPendukung = d.lampiran.filter((l) => l.jenis_berkas === "lampiran_pendukung");
   const pertama = berkasUtama[0];
   let preview = "";
-  if (!pertama) preview = '<div class="em">' + ic("image") + "<b>Berkas belum diunggah</b><span>Unggah Berkas Surat (hasil pindai atau PDF suratnya) lewat panel Berkas Surat.</span></div>";
+  if (!pertama) preview = '<div class="em">' + ic("fileup") + "<b>Berkas belum diunggah</b><span>Unggah Berkas Surat (hasil pindai atau PDF suratnya) lewat panel Berkas Surat.</span></div>";
   else if (pertama.mime === "application/pdf") preview = '<iframe class="frame-file" src="/api/lampiran/' + pertama.id + '/file" title="Pratinjau PDF"></iframe>';
   else if (String(pertama.mime).startsWith("image/")) preview = '<img class="prev-img" src="/api/lampiran/' + pertama.id + '/file" alt="Pratinjau berkas surat">';
-  else preview = '<div class="em">' + ic("pdf") + "<b>Pratinjau tidak tersedia untuk tipe ini</b><span>Gunakan tombol unduh pada Berkas Surat.</span></div>";
+  else preview = '<div class="em">' + ic("filetext") + "<b>Pratinjau tidak tersedia untuk tipe ini</b><span>Gunakan tombol unduh pada Berkas Surat.</span></div>";
   const baris = [
-    ["Nomor Agenda", s.nomor_agenda || "-"], ["Nomor Surat", s.nomor_surat], ["Jenis", s.jenis === "masuk" ? "Surat Masuk" : "Surat Keluar"],
+    ["Nomor Agenda", s.nomor_agenda || "-"], ["Nomor Surat", s.nomor_surat],
     ["Tanggal Surat", fmtTgl(s.tanggal_surat)], ["Tanggal Agenda", fmtTgl(s.tanggal_agenda)],
     s.jenis === "masuk" ? ["Asal Surat", s.asal || "-"] : ["Tujuan Surat", s.tujuan || "-"],
-    ["Perihal", s.perihal], ["Klasifikasi", s.klasifikasi || "-"], ["Sifat Surat", s.sifat], s.jenis === "masuk" ? ["Status Disposisi", s.status_disposisi] : ["Status", "Terkirim"],
+    ["Klasifikasi", s.klasifikasi || "-"], ["Sifat Surat", s.sifat],
   ];
   if (s.ringkasan) baris.push(["Ringkasan", s.ringkasan]);
   if (s.lokasi_fisik) baris.push(["Lokasi Arsip Fisik", s.lokasi_fisik]);
   if (s.jenis === "keluar" && s.penandatangan) baris.push(["Penandatangan", s.penandatangan]);
   if (s.keterangan) baris.push(["Keterangan", s.keterangan]);
-  const barisBerkas = (l, bisaPindah) => '<li><span class="fic ' + (l.mime === "application/pdf" ? "dg" : "in") + '">' + ic(l.mime === "application/pdf" ? "pdf" : "image") + '</span><div><b>' + esc(l.nama_asli) + "</b><small>" + fmtUkuran(l.ukuran) + " - " + fmtTgl(l.diupload_pada) + '</small></div><span class="acts"><button class="btn sec sm" data-lihat="' + l.id + '">' + ic("eye") + 'Lihat</button><a class="btn sec sm" href="/api/lampiran/' + l.id + '/file?dl=1">' + ic("download") + "Unduh</a>" + (bisaUbah && bisaPindah ? '<button class="btn sec sm" data-pindah="' + l.id + '" data-ke="' + (l.jenis_berkas === "lampiran_pendukung" ? "berkas_surat" : "lampiran_pendukung") + '">' + (l.jenis_berkas === "lampiran_pendukung" ? "Jadikan Berkas Surat" : "Jadikan Pendukung") + "</button>" : "") + (bisaUbah ? '<button class="btn dgo sm icn" data-hapus-lamp="' + l.id + '" aria-label="Hapus lampiran">' + ic("delete") + "</button>" : "") + "</span></li>";
+  const barisBerkas = (l, bisaPindah) => '<li><span class="fic ' + (l.mime === "application/pdf" ? "dg" : "in") + '">' + ic(l.mime === "application/pdf" ? "filetext" : "image") + '</span><div><b>' + esc(l.nama_asli) + "</b><small>" + fmtUkuran(l.ukuran) + " - " + fmtTgl(l.diupload_pada) + '</small></div><span class="acts"><button class="fbtn" data-lihat="' + l.id + '" aria-label="Lihat berkas">' + ic("eye") + '</button><a class="fbtn" href="/api/lampiran/' + l.id + '/file?dl=1" aria-label="Unduh berkas">' + ic("download") + "</a>" + (bisaUbah ? '<button class="fbtn" data-fmenu="' + l.id + '" aria-label="Aksi lainnya" aria-expanded="false">' + ic("more") + '</button><span class="fmenu" id="fm-' + l.id + '" hidden>' + (bisaPindah ? '<button type="button" data-pindah="' + l.id + '" data-ke="' + (l.jenis_berkas === "lampiran_pendukung" ? "berkas_surat" : "lampiran_pendukung") + '">' + ic("arr-both") + (l.jenis_berkas === "lampiran_pendukung" ? "Jadikan Berkas Surat" : "Jadikan Pendukung") + "</button>" : "") + '<button type="button" class="red" data-hapus-lamp="' + l.id + '">' + ic("trash") + "Hapus lampiran</button></span>" : "") + "</span></li>";
   let lamp = berkasUtama.length ? '<ul class="fi2">' + berkasUtama.map((l) => barisBerkas(l, s.jenis === "keluar")).join("") + "</ul>" : '<p class="mu">Berkas belum diunggah.</p>';
   let lampPend = berkasPendukung.length ? '<ul class="fi2">' + berkasPendukung.map((l) => barisBerkas(l, true)).join("") + "</ul>" : '<p class="mu">Belum ada lampiran pendukung.</p>';
   let penugasanHtml = "";
   if (s.jenis === "keluar" && (s.jenis_penugasan || d.induk || (d.guru_ditugaskan || []).length)) {
-    penugasanHtml = '<div style="border-top:1px solid var(--bd);margin-top:14px;padding-top:14px"><h3 class="sh">Penugasan</h3>' + (s.jenis_penugasan ? '<span class="bd in">' + esc(s.jenis_penugasan) + "</span>" : "")
-      + (d.induk ? '<p style="margin-bottom:12px">Menindaklanjuti surat masuk <b>' + esc(d.induk.nomor_agenda || d.induk.nomor_surat) + "</b> - " + esc(d.induk.perihal) + ' <button class="btn sec sm" id="bKeInduk">Lihat Surat Masuk</button></p>' : "")
+    penugasanHtml = '<div class="card"><div class="ch"><h2>Penugasan</h2>' + (s.jenis_penugasan ? '<span class="bd in"><i class="dt"></i>' + esc(s.jenis_penugasan) + "</span>" : "") + '</div><div class="cb">'
+      + (d.induk ? '<p style="margin:0 0 12px">Menindaklanjuti surat masuk <b>' + esc(d.induk.nomor_agenda || d.induk.nomor_surat) + "</b> - " + esc(d.induk.perihal) + ' <button class="btn sec sm" id="bKeInduk">Lihat Surat Masuk' + ic("chev") + "</button></p>" : "")
       + "<b>Guru / Staff yang Ditugaskan</b>"
-      + ((d.guru_ditugaskan || []).length ? '<ul class="fi2" style="margin-top:8px">' + d.guru_ditugaskan.map((g) => '<li><span class="fic in">' + ic("users") + '</span><div><b>' + esc(g.nama) + "</b><small>" + (g.nip ? "NIP. " + esc(g.nip) : "Tanpa NIP") + "</small></div></li>").join("") + "</ul>" : '<p class="mu" style="margin-top:6px">Belum ada guru yang ditugaskan pada surat ini.</p>')
-      + "</div>";
+      + ((d.guru_ditugaskan || []).length ? '<ul class="fi2" style="margin-top:8px">' + d.guru_ditugaskan.map((g) => '<li><span class="kl" style="width:38px;height:38px;font-size:13px;font-weight:700">' + esc(inisial(g.nama)) + '</span><div><b>' + esc(g.nama) + "</b><small>" + (g.nip ? "NIP. " + esc(g.nip) : "Tanpa NIP") + "</small></div></li>").join("") + "</ul>" : '<p class="mu" style="margin-top:6px">Belum ada guru yang ditugaskan pada surat ini.</p>')
+      + "</div></div>";
   }
   let turunanHtml = "";
   if (s.jenis === "masuk" && (d.turunan || []).length) {
-    turunanHtml = '<div style="border-top:1px solid var(--bd);margin-top:14px;padding-top:14px"><h3 class="sh">Surat Keluar Terkait</h3><ul class="fi2">'
-      + d.turunan.map((t) => '<li><span class="fic in">' + ic("outbox") + '</span><div><b>' + esc(t.jenis_penugasan || "Surat Keluar") + "</b><small>" + esc(t.nomor_surat) + " - " + fmtTgl(t.tanggal_agenda) + " - " + esc(t.perihal) + '</small></div><span class="acts"><button class="btn sec sm" data-turunan="' + t.id + '">Detail</button></span></li>').join("")
-      + "</ul></div>";
+    turunanHtml = '<div class="card"><div class="ch"><h2>Surat Keluar Terkait</h2></div><div class="cb"><ul class="fi2">'
+      + d.turunan.map((t) => '<li><span class="fic in">' + ic("send") + '</span><div><b>' + esc(t.jenis_penugasan || "Surat Keluar") + "</b><small>" + esc(t.nomor_surat) + " - " + fmtTgl(t.tanggal_agenda) + " - " + esc(t.perihal) + '</small></div><span class="acts"><button class="btn sec sm" data-turunan="' + t.id + '">Detail</button></span></li>').join("")
+      + "</ul></div></div>";
   }
   let disp = "";
   if (s.jenis === "masuk") {
-    disp = '<div class="card mt"><div class="ch"><h2>3. Disposisi</h2></div><div class="cb">'
-      + (d.disposisi.length ? '<ul class="tl" id="tl">' + d.disposisi.map((x) => '<li style="--fg:' + (x.status === "Selesai" ? "#0B6A4F" : terlambatDisp(x) ? "#C53838" : "#A96100") + '"><b>Disposisi ke ' + esc(x.kepada) + "</b> - " + badgeStatus(terlambatDisp(x) ? "Terlambat" : (x.status === "Baru" ? "Belum" : x.status)) + "<small>" + esc(x.instruksi || "") + (x.batas_waktu ? " - Batas: " + fmtTgl(x.batas_waktu) + (() => { const tg = x.status !== "Selesai" ? labelTenggat(x.batas_waktu) : null; return tg ? " (" + tg.t + ")" : ""; })() : "") + " - " + fmtTgl(x.dibuat_pada) + '</small><span class="acts" style="margin-top:6px">' + (x.status !== "Selesai" ? '<button class="btn sec sm" data-disp-proses="' + x.id + '">' + ic("clock") + "Proses</button>" : "") + (x.status !== "Selesai" ? '<button class="btn sec sm" data-disp-selesai="' + x.id + '">' + ic("check") + "Tandai Selesai</button>" : "") + "</span></li>").join("") + "</ul>" : '<p class="mu" style="margin-bottom:14px">Belum ada disposisi untuk surat ini.</p>')
+    disp = '<div class="card"><div class="ch"><h2>Disposisi</h2>' + (bisaUbah ? '<button class="btn sec sm" id="bTambahDisp">' + ic("plus") + "Tambah Disposisi</button>" : "") + '</div><div class="cb">'
+      + (d.disposisi.length ? '<ul class="tl" id="tl">' + d.disposisi.map((x) => '<li style="--fg:' + (x.status === "Selesai" ? "#0B6A4F" : terlambatDisp(x) ? "#C53838" : "#A96100") + '"><b>Disposisi ke ' + esc(x.kepada) + "</b> - " + badgeStatus(terlambatDisp(x) ? "Terlambat" : (x.status === "Baru" ? "Belum" : x.status)) + "<small>" + esc(x.instruksi || "") + (x.batas_waktu ? " - Batas: " + fmtTgl(x.batas_waktu) + (() => { const tg = x.status !== "Selesai" ? labelTenggat(x.batas_waktu) : null; return tg ? " (" + tg.t + ")" : ""; })() : "") + " - " + fmtTgl(x.dibuat_pada) + '</small><span class="acts" style="margin-top:6px">' + (x.status !== "Selesai" ? '<button class="btn sec sm" data-disp-proses="' + x.id + '">' + ic("loader") + "Proses</button>" : "") + (x.status !== "Selesai" ? '<button class="btn sec sm" data-disp-selesai="' + x.id + '">' + ic("check") + "Tandai Selesai</button>" : "") + "</span></li>").join("") + "</ul>" : '<p class="mu" style="margin-bottom:14px">Belum ada disposisi untuk surat ini.</p>')
       + '<form id="formDisp" style="border-top:1px solid var(--bd);padding-top:16px"><div class="fg"><div class="fl"><label>Diteruskan Kepada <span class="rq2">*</span></label><input id="diKepada" required placeholder="Nama atau jabatan penerima" list="dlGuru"><datalist id="dlGuru"></datalist></div><div class="fl"><label>Batas Waktu</label><input id="diBatas" type="date"></div><div class="fl w"><label>Instruksi</label><textarea id="diInstruksi" placeholder="Isi instruksi disposisi"></textarea></div></div><button class="btn" type="submit">' + ic("send") + "Kirim Disposisi</button></form>"
       + "</div></div>";
   }
   const cetakDiBar = s.jenis === "masuk" && !bisaUbah;
   let barBtn = "";
-  if (s.jenis === "masuk" && bisaUbah) barBtn += '<button class="btn" data-bar="tambah">' + ic("send") + "Tambah Disposisi</button>";
+  if (s.jenis === "masuk" && bisaUbah) barBtn += '<button class="btn" data-bar="tambah">' + ic("plus") + "Tambah Disposisi</button>";
   else if (cetakDiBar) barBtn += '<button class="btn sec" data-bar="cetak">' + ic("print") + "Cetak</button>";
   if (bisaUbah) barBtn += s.jenis === "keluar" ? '<button class="btn" data-bar="ubah">' + ic("edit") + "Ubah Surat</button>" : '<button class="btn sec" data-bar="ubah">' + ic("edit") + "Ubah</button>";
   barBtn += '<button class="btn sec ico" id="bLainnya" aria-label="Aksi lainnya" aria-expanded="false">&#8943;</button>';
@@ -471,23 +471,26 @@ async function viewDetail(id) {
   if (s.jenis === "masuk" && !cetakDiBar) sheetBtn += '<button type="button" data-sheet="cetak">' + ic("print") + "Cetak Lembar Disposisi</button>";
   if (bisaUbah) sheetBtn += '<button type="button" class="red" data-sheet="sampah">' + ic("trash") + "Pindah ke Sampah</button>";
   const sheetHtml = '<div class="sheet" id="sheetDetail" hidden>' + sheetBtn + '</div>';
-  $("#main").innerHTML = headPage(s.nomor_surat, (s.jenis === "masuk" ? "Surat Masuk" : "Surat Keluar") + " - Agenda " + (s.nomor_agenda || "-"),
-    ((s.jenis === "masuk" && bisaUbah) ? '<button class="btn" id="bTambahDisp">' + ic("send") + "Tambah Disposisi</button>" : "")
-    + (bisaUbah ? '<button class="btn sec" id="bUbah">' + ic("edit") + "Ubah Surat</button>" : "")
+  const statusPill = s.jenis === "masuk" ? ((d.disposisi || []).some((x) => terlambatDisp(x)) ? badgeStatus("Terlambat") : badgeStatus(s.status_disposisi)) : '<span class="bd ok"><i class="dt"></i>Terkirim</span>';
+  const pillsHtml = '<div class="pills">' + statusPill + (s.jenis === "keluar" && s.jenis_penugasan ? '<span class="bd in"><i class="dt"></i>' + esc(s.jenis_penugasan) + "</span>" : "") + '<span class="bd gr"><i class="dt"></i>' + esc(s.sifat || "Biasa") + "</span></div>";
+  $("#main").innerHTML = headPage(s.perihal, (s.nomor_surat || "-") + " · Agenda " + (s.jenis === "masuk" ? "Masuk " : "Keluar ") + (s.nomor_agenda || "-"),
+    (bisaUbah ? '<button class="btn sec" id="bUbah">' + ic("edit") + "Ubah Surat</button>" : "")
     + (s.jenis === "masuk" ? '<a class="btn sec" id="bCetak" href="/cetak/disposisi/' + s.id + '" target="_blank">' + ic("print") + "Cetak Lembar Disposisi</a>" : "")
     + (bisaUbah ? '<button class="btn danger-txt" id="bSampah">' + ic("trash") + "Pindah ke Sampah</button>" : ""), "sembunyi-hp",
-    '<button class="backlink sembunyi-hp" id="bKembali">' + ic("back") + "Kembali</button>")
-    + '<div class="card"><div class="ch"><h2>1. Informasi</h2>' + (s.jenis === "masuk" ? badgeStatus(s.status_disposisi) : '<span class="bd ok">Terkirim</span>') + '</div><div class="cb"><dl class="dl">'
-    + baris.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").join("") + "</dl>" + penugasanHtml + turunanHtml + "</div></div>"
-    + '<div class="card mt"><div class="ch"><h2>2. Berkas</h2>' + badgeSifat(s.sifat) + '<span class="bd gr">' + berkasUtama.length + " / 5 berkas</span></div><div class=\"cb\">"
-    + (pertama ? '<div class="pvbar"><span class="pvname">' + esc(pertama.nama_asli) + '</span><span class="acts"><a class="btn sec sm" href="/api/lampiran/' + pertama.id + '/file" target="_blank" rel="noopener">' + ic("eye") + 'Buka</a><a class="btn sec sm" href="/api/lampiran/' + pertama.id + '/file?dl=1">' + ic("download") + 'Unduh</a></span></div>' : "")
-    + '<div class="pv" style="padding:0;background:none">' + preview + "</div>"
-    + '<h3 class="sh" style="margin-top:16px">Berkas Surat</h3>' + lamp
+    '<button class="backlink sembunyi-hp" id="bKembali">' + ic("back") + "Kembali</button>", pillsHtml)
+    + '<div class="dt2"><div class="dtcol">'
+    + '<div class="card"><div class="ch"><h2>Berkas</h2><span class="mu" style="font-size:12.5px">Pratinjau berkas surat pertama</span></div><div class="cb">'
+    + '<div class="pv">' + preview + "</div>"
+    + '<h3 class="sh" style="margin-top:16px">Berkas Surat <span class="bd gr" style="margin-left:6px">' + berkasUtama.length + " / 5 berkas</span></h3>" + lamp
     + (bisaUbah ? '<button class="dz" id="bUpload"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Unggah Berkas Surat</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas" + (r2Aktif ? "" : " - upload belum aktif") + "</span></button>" : "")
-    + (s.jenis === "keluar" ? '<h3 class="sh" style="margin-top:16px">Lampiran Pendukung</h3>' + lampPend + '<p class="mu" style="margin:10px 0">Bukti kegiatan dari surat ini, misalnya foto kegiatan dan daftar hadir. Gunakan nama berkas yang jelas, contoh: Daftar Hadir - Rapat Wali Murid.pdf</p>' + (bisaUbah ? '<button class="dz" id="bUploadPendukung"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Tambah Lampiran Pendukung</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas" + (r2Aktif ? "" : " - upload belum aktif") + "</span></button>" : "") : "")
+    + (s.jenis === "keluar" ? '<h3 class="sh" style="margin-top:16px">Lampiran Pendukung <span class="bd gr" style="margin-left:6px">' + berkasPendukung.length + ' berkas</span></h3>' + lampPend + '<p class="mu" style="margin:10px 0">Bukti kegiatan dari surat ini, misalnya foto kegiatan dan daftar hadir. Gunakan nama berkas yang jelas, contoh: Daftar Hadir - Rapat Wali Murid.pdf</p>' + (bisaUbah ? '<button class="dz" id="bUploadPendukung"' + (r2Aktif ? "" : " disabled") + ">" + ic("upload") + "<b>Tambah Lampiran Pendukung</b><span>PDF, JPG, PNG, WEBP - maks 10 MB per berkas" + (r2Aktif ? "" : " - upload belum aktif") + "</span></button>" : "") : "")
     + "</div></div>"
-    + disp
-    + '<div class="card mt"><div class="ch"><h2>4. Riwayat</h2></div><div class="cb">' + riwayatSurat(s, d.disposisi, d.lampiran) + "</div></div>" + barHtml + sheetHtml;
+    + '</div><div class="dtcol">'
+    + '<div class="card"><div class="ch"><h2>Data Surat</h2>' + statusPill + '</div><div class="cb"><dl class="dl">'
+    + baris.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").join("") + "</dl></div></div>"
+    + penugasanHtml + turunanHtml + disp
+    + '<div class="card"><div class="ch"><h2>Riwayat</h2></div><div class="cb">' + riwayatSurat(s, d.disposisi, d.lampiran) + "</div></div>"
+    + '</div></div>' + barHtml + sheetHtml;
   $("#bKembali").onclick = () => go(s.jenis);
   const bu = $("#bUbah"); if (bu) bu.onclick = () => go("form", { id: s.id });
   const btd = $("#bTambahDisp"); if (btd) btd.onclick = () => { const f = $("#formDisp"); if (f) { f.scrollIntoView({ behavior: "smooth", block: "center" }); const k = $("#diKepada"); if (k) k.focus({ preventScroll: true }); } };
@@ -496,7 +499,8 @@ async function viewDetail(id) {
   $$("[data-bar]").forEach((b) => b.onclick = () => { const k = b.dataset.bar; if (k === "tambah") { const t = $("#bTambahDisp"); if (t) t.click(); } else if (k === "ubah") { const t = $("#bUbah"); if (t) t.click(); } else if (k === "cetak") { const t = $("#bCetak"); if (t) t.click(); } });
   const lb = $("#bLainnya"); if (lb) lb.onclick = (e) => { e.stopPropagation(); const sh = $("#sheetDetail"); if (!sh) return; sh.hidden = !sh.hidden; lb.setAttribute("aria-expanded", String(!sh.hidden)); };
   $$("#sheetDetail [data-sheet]").forEach((b) => b.onclick = () => { const k = b.dataset.sheet; const sh = $("#sheetDetail"); if (sh) sh.hidden = true; if (lb) lb.setAttribute("aria-expanded", "false"); if (k === "kembali") { const t = $("#bKembali"); if (t) t.click(); } else if (k === "cetak") { const t = $("#bCetak"); if (t) t.click(); } else if (k === "sampah") { const t = $("#bSampah"); if (t) t.click(); } });
-  if (!window._sheetTerpasang) { window._sheetTerpasang = true; document.addEventListener("click", (e) => { if (!e.target.closest || (!e.target.closest(".bbar") && !e.target.closest(".sheet"))) { $$(".sheet").forEach((el) => { el.hidden = true; }); const l = $("#bLainnya"); if (l) l.setAttribute("aria-expanded", "false"); } }); }
+  $$("[data-fmenu]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); const m = $("#fm-" + b.dataset.fmenu); if (!m) return; const was = m.hidden; $$(".fmenu").forEach((el) => { el.hidden = true; }); m.hidden = !was; b.setAttribute("aria-expanded", String(!was)); }));
+  if (!window._sheetTerpasang) { window._sheetTerpasang = true; document.addEventListener("click", (e) => { if (!e.target.closest || (!e.target.closest(".bbar") && !e.target.closest(".sheet"))) { $$(".sheet").forEach((el) => { el.hidden = true; }); $$(".fmenu").forEach((el) => { el.hidden = true; }); const l = $("#bLainnya"); if (l) l.setAttribute("aria-expanded", "false"); } }); }
   const up = $("#bUpload"); if (up) up.onclick = () => $("#fileLampiran").click();
   $("#fileLampiran").onchange = async (e) => {
     const files = [...e.target.files]; e.target.value = "";
@@ -541,8 +545,8 @@ async function viewDisposisi() {
   const bisaUbah = true;
   $("#main").innerHTML = headPage("Disposisi", "Antrian tindak lanjut surat masuk, urut dari yang paling awal dibuat - yang terlambat berlabel merah")
     + '<div class="card">' + (d.items.length ? '<div class="tw"><table class="a"><thead><tr>' + thUrut("No.", "dibuat", dispState, ' style="width:52px"') + thUrut("Surat", "perihal", dispState) + thUrut("Kepada", "kepada", dispState) + "<th>Instruksi</th>" + thUrut("Batas Waktu", "batas", dispState) + thUrut("Status", "status", dispState) + "<th>Aksi</th></tr></thead><tbody>" + ""
-      + d.items.map((x, idx) => { const tl = terlambatDisp(x); return '<tr class="rw" data-ke="' + x.surat_id + '"><td>' + (idx + 1) + '</td><td><b>' + esc(x.nomor_surat || "-") + "</b><small>" + esc(ringkas(x.perihal)) + '</small><small>Agenda ' + esc(x.nomor_agenda || "-") + "</small></td><td>" + esc(ringkas(x.kepada)) + "</td><td>" + esc(ringkas(x.instruksi || "-")) + "</td><td>" + (x.batas_waktu ? '<span class="' + (tl ? "lt" : "") + '">' + (tl ? ic("warning") : "") + fmtTgl(x.batas_waktu) + (tl ? " - TERLAMBAT" : "") + "</span>" : "-") + "</td><td>" + badgeStatus(tl ? "Terlambat" : (x.status === "Baru" ? "Belum" : x.status)) + '</td><td><span class="acts">' + (x.status !== "Selesai" ? '<button class="btn sec sm" data-proses="' + x.id + '">' + ic("clock") + "Proses</button>" : "") + (x.status !== "Selesai" ? '<button class="btn sec sm" data-selesai="' + x.id + '">' + ic("check") + "Selesai</button>" : "") + "</span></td></tr>"; }).join("")
-      + "</tbody></table></div><p class=\"scnote\">Geser ke kanan untuk kolom lainnya</p>" : kosong("Tidak ada disposisi aktif", "Semua disposisi sudah selesai atau belum ada surat yang didisposisi.", "disposition")) + "</div>";
+      + d.items.map((x, idx) => { const tl = terlambatDisp(x); return '<tr class="rw" data-ke="' + x.surat_id + '"><td>' + (idx + 1) + '</td><td><b>' + esc(x.nomor_surat || "-") + "</b><small>" + esc(ringkas(x.perihal)) + '</small><small>Agenda ' + esc(x.nomor_agenda || "-") + "</small></td><td>" + esc(ringkas(x.kepada)) + "</td><td>" + esc(ringkas(x.instruksi || "-")) + "</td><td>" + (x.batas_waktu ? '<span class="' + (tl ? "lt" : "") + '">' + (tl ? ic("clockalert") : "") + fmtTgl(x.batas_waktu) + (tl ? " - TERLAMBAT" : "") + "</span>" : "-") + "</td><td>" + badgeStatus(tl ? "Terlambat" : (x.status === "Baru" ? "Belum" : x.status)) + '</td><td><span class="acts">' + (x.status !== "Selesai" ? '<button class="btn sec sm" data-proses="' + x.id + '">' + ic("loader") + "Proses</button>" : "") + (x.status !== "Selesai" ? '<button class="btn sec sm" data-selesai="' + x.id + '">' + ic("check") + "Selesai</button>" : "") + "</span></td></tr>"; }).join("")
+      + "</tbody></table></div><p class=\"scnote\">Geser ke kanan untuk kolom lainnya</p>" : kosong("Tidak ada disposisi aktif", "Semua disposisi sudah selesai atau belum ada surat yang didisposisi.", "clipboard")) + "</div>";
   $$("[data-selesai]").forEach((b) => (b.onclick = async (e) => { e.stopPropagation(); try { await api("/api/disposisi/" + b.dataset.selesai, { method: "PUT", body: JSON.stringify({ status: "Selesai" }) }); toast("Disposisi ditandai selesai"); viewDisposisi(); } catch (e) { toast(e.message, true); } }));
   $$("[data-proses]").forEach((b) => (b.onclick = async (e) => { e.stopPropagation(); try { await api("/api/disposisi/" + b.dataset.proses, { method: "PUT", body: JSON.stringify({ status: "Diproses" }) }); toast("Disposisi ditandai sedang diproses"); viewDisposisi(); } catch (e) { toast(e.message, true); } }));
   ikatUrut(dispState, viewDisposisi);
@@ -670,7 +674,7 @@ async function viewForm(arg) {
   }
   function gambarFileList() {
     const ul = $("#fsFileList"); if (!ul) return;
-    ul.innerHTML = formFiles.map((f, i) => '<li><span class="fic in">' + ic("image") + '</span><div><b>' + esc(f.name) + "</b><small>" + fmtUkuran(f.size) + '</small></div><button type="button" class="btn dgo sm" data-rm="' + i + '" aria-label="Hapus berkas">' + ic("delete") + "</button></li>").join("");
+    ul.innerHTML = formFiles.map((f, i) => '<li><span class="fic in">' + ic("image") + '</span><div><b>' + esc(f.name) + "</b><small>" + fmtUkuran(f.size) + '</small></div><button type="button" class="btn dgo sm" data-rm="' + i + '" aria-label="Hapus berkas">' + ic("trash") + "</button></li>").join("");
     $$("#fsFileList [data-rm]").forEach((b) => (b.onclick = () => { formFiles.splice(parseInt(b.dataset.rm, 10), 1); gambarFileList(); }));
   }
   $("#formSurat").onsubmit = async (e) => {
@@ -849,7 +853,7 @@ async function viewRekap() {
   $("#rkBody").innerHTML = '<div class="phd" style="margin-bottom:16px"><div class="acts"><label style="font-weight:600">Tahun</label><select id="rkTahun" style="width:auto">' + opsiTahun.join("") + '</select></div><span class="mu">Data tahun ' + esc(rekapTahun) + " - diperbarui dari arsip aktif</span></div>"
     + '<div class="stats" style="margin-bottom:16px">'
     + '<div class="card st"><span class="si pr">' + ic("inbox") + '</span><div><div class="sn2">' + (d.totals.masuk || 0) + "</div><small>Total Surat Masuk</small></div></div>"
-    + '<div class="card st"><span class="si in">' + ic("outbox") + '</span><div><div class="sn2">' + (d.totals.keluar || 0) + "</div><small>Total Surat Keluar</small></div></div>"
+    + '<div class="card st"><span class="si in">' + ic("send") + '</span><div><div class="sn2">' + (d.totals.keluar || 0) + "</div><small>Total Surat Keluar</small></div></div>"
     + '<div class="card st"><span class="si gr">' + ic("agenda") + '</span><div><div class="sn2">' + (d.totals.total || 0) + "</div><small>Total Arsip Aktif</small></div></div>"
     + '<div class="card st"><span class="si se">' + ic("lock") + '</span><div><div class="sn2">' + (d.totals.rahasia || 0) + "</div><small>Surat Rahasia</small></div></div></div>"
     + '<div class="dls">'
@@ -933,7 +937,7 @@ async function viewCari(arg) {
   catch (e) { $("#cariBody").innerHTML = '<div class="cb er">' + esc(e.message) + "</div>"; return; }
   const grup = (judul, d, jenis) => '<div class="cb" style="padding-top:6px"><h3 style="margin:10px 0">' + judul + ' <span class="mu" style="font-weight:500">(' + d.total + ' hasil)</span></h3>'
     + (d.items.length ? '<div class="tw"><table class="a"><thead><tr><th style="width:52px">No.</th><th>Nomor Surat</th><th>Tanggal Agenda</th><th>Perihal</th><th>' + (jenis === "masuk" ? "Asal" : "Tujuan") + '</th><th>Status</th></tr></thead><tbody>'
-      + d.items.map((r, idx) => '<tr class="rw" data-detail="' + r.id + '" data-jenis="' + jenis + '"><td>' + (idx + 1) + '</td><td><b>' + esc(r.nomor_surat) + "</b><small>Agenda " + esc(r.nomor_agenda || "-") + '</small></td><td>' + fmtTgl(r.tanggal_agenda) + "</td><td><b>" + esc(ringkas(r.perihal)) + "</b></td><td>" + esc(ringkas((jenis === "masuk" ? r.asal : r.tujuan) || "-")) + "</td><td>" + (jenis === "masuk" ? badgeStatus(r.status_disposisi) : '<span class="bd ok">Terkirim</span>') + "</td></tr>").join("")
+      + d.items.map((r, idx) => '<tr class="rw" data-detail="' + r.id + '" data-jenis="' + jenis + '"><td>' + (idx + 1) + '</td><td><b>' + esc(r.nomor_surat) + "</b><small>Agenda " + esc(r.nomor_agenda || "-") + '</small></td><td>' + fmtTgl(r.tanggal_agenda) + "</td><td><b>" + esc(ringkas(r.perihal)) + "</b></td><td>" + esc(ringkas((jenis === "masuk" ? r.asal : r.tujuan) || "-")) + "</td><td>" + (jenis === "masuk" ? badgeStatus(r.status_disposisi) : '<span class="bd ok"><i class="dt"></i>Terkirim</span>') + "</td></tr>").join("")
       + "</tbody></table></div>" + (d.total > d.items.length ? '<p class="mu" style="margin-top:8px">Menampilkan ' + d.items.length + " hasil pertama. Persempit kata kunci atau buka menu " + judul + " untuk melihat semua.</p>" : "") : '<p class="mu">Tidak ada hasil.</p>') + "</div>";
   $("#cariBody").innerHTML = grup("Surat Masuk", dm, "masuk") + grup("Surat Keluar", dk, "keluar");
   $$("#cariBody [data-detail]").forEach((tr) => (tr.onclick = () => { window._detailJenis = tr.dataset.jenis; go("detail", parseInt(tr.dataset.detail, 10)); }));
