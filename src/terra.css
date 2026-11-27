@@ -31,7 +31,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .col{display:flex;flex-direction:column;gap:20px;min-width:0}
 /* shell */
 .app{display:grid;grid-template-columns:264px 1fr;min-height:100vh}
-#sb{background:var(--km9);color:#E8F5EE;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;padding:12px 12px;z-index:30}
+#sb{background:var(--km9);color:#E8F5EE;position:sticky;top:0;height:100vh;height:100dvh;overflow-y:auto;display:flex;flex-direction:column;padding:12px 12px;z-index:30}
 .sn{flex:1}
 .br{display:flex;gap:10px;align-items:center;padding:2px 8px 10px;border-bottom:1px solid rgba(255,255,255,.15);margin-bottom:8px}
 .bm{width:36px;height:36px;border-radius:10px;background:#fff;color:var(--km9);display:grid;place-items:center;border-bottom:3px solid var(--gold);flex:none}
@@ -476,3 +476,5 @@ body.ciut .nv .bdg{position:absolute;top:4px;right:4px;margin:0;min-width:16px;h
 .th-ac .fbtn{flex:1}
 .th-ac .fmenu{top:34px;z-index:20}
 @media(max-width:720px){.thumbs{grid-template-columns:repeat(2,1fr)}}
+
+/* 1.8.3: laci HP memakai 100dvh (cadangan 100vh) supaya setinggi layar terlihat, Keluar + Versi langsung tampak */

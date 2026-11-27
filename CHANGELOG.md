@@ -2,6 +2,11 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.8.3] - 2026-11-27
+
+### Diperbaiki
+- Keluar dan Versi di bawah laci navigasi HP kini langsung tampak begitu laci dibuka: tinggi laci diganti 100dvh (dengan 100vh sebagai cadangan), yaitu tinggi layar yang benar-benar terlihat saat itu. Sebelumnya laci memakai 100vh (tinggi layar penuh termasuk area di balik bilah alamat browser), sehingga saat bilah alamat tampil, ujung bawah laci terpotong dan Keluar + Versi baru muncul sesudah bilah alamat hilang atau laci di-scroll.
+
 ## [1.8.2] - 2026-11-27
 
 ### Ditambahkan
