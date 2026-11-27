@@ -36,6 +36,7 @@ th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
   <div class="app">
     <div class="ov" id="ovl"></div>
     <aside id="sb"></aside>
+    <button class="tgl" id="btnCiut" aria-label="Ciutkan bilah navigasi"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
     <div class="mn">
       <header class="top" id="topbar"></header>
       <main id="main"></main>
@@ -114,7 +115,7 @@ function inisial(n) { return String(n || "?").split(/\s+/).map((x) => x[0]).slic
 function renderLogin(err) {
   $("#appView").hidden = true;
   const lv = $("#loginView"); lv.hidden = false;
-  lv.innerHTML = '<div class="lg"><div class="ll"><div class="bm big">' + ic("letterhead") + '</div><h1>E-Arsip</h1><p>Kelola surat masuk, surat keluar, dan disposisi dalam satu aplikasi yang mudah dipakai petugas TU.</p><ul>'
+  lv.innerHTML = '<div class="lg"><div class="ll"><div class="bm big">' + ic("arsip") + '</div><h1>E-Arsip</h1><p>Kelola surat masuk, surat keluar, dan disposisi dalam satu aplikasi yang mudah dipakai petugas TU.</p><ul>'
     + "<li>" + ic("inbox") + "<span>Catat surat dengan Nomor Agenda yang rapi dan mudah dicari</span></li>"
     + "<li>" + ic("clipboard") + "<span>Pantau disposisi yang belum selesai dan terlambat</span></li>"
     + "<li>" + ic("report") + "<span>Cetak Buku Agenda dan Rekap Tahunan siap tanda tangan</span></li></ul></div>"
@@ -149,7 +150,8 @@ async function masukAplikasi() {
   if (rk) klasList = rk.items || [];
   SETTINGS = rs ? (rs.settings || rs || {}) : {};
   $("#loginView").hidden = true; $("#appView").hidden = false;
-  renderShell(); const pr = parseRute(); if (pr) go(pr.p, pr.arg); else go("beranda");
+  document.body.classList.toggle("ciut", (() => { try { return localStorage.getItem("ea_sb_ciut") === "1"; } catch (e) { return false; } })());
+  renderShell(); const bc = $("#btnCiut"); if (bc) { bc.setAttribute("aria-label", document.body.classList.contains("ciut") ? "Lebarkan bilah navigasi" : "Ciutkan bilah navigasi"); bc.onclick = () => { const c = !document.body.classList.contains("ciut"); document.body.classList.toggle("ciut", c); try { localStorage.setItem("ea_sb_ciut", c ? "1" : "0"); } catch (e) {} bc.setAttribute("aria-label", c ? "Lebarkan bilah navigasi" : "Ciutkan bilah navigasi"); }; } const pr = parseRute(); if (pr) go(pr.p, pr.arg); else go("beranda");
 }
 async function keluar() { try { await api("/api/logout", { method: "POST" }); } catch (e) {} me = null; renderLogin(); }
 
@@ -183,15 +185,15 @@ function bukaFlyout(kunci, tombol) {
   f.querySelectorAll("[data-fly]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); tutupFlyout(); cfg.tautan[parseInt(a.dataset.fly, 10)][1](); }));
 }
 function renderShell() {
-  let h = '<div class="br"><div class="bm">' + ic("letterhead") + '</div><div class="bt"><b>E-Arsip</b><small class="nl">' + esc(namaInstansi()) + "</small></div></div>";
+  let h = '<div class="br"><div class="bm">' + ic("arsip") + '</div><div class="bt"><b>E-Arsip</b><small class="nl">' + esc(namaInstansi()) + "</small></div></div>";
   h += '<nav class="sn">';
   for (const [grup, items0] of MENU) {
     const items = grup === "ADMINISTRASI" && me.role === "admin" ? [...items0, ["audit", "Audit", "shield"]] : items0;
     h += '<div class="ng">' + grup + "</div>";
-    for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
+    for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '" title="' + label + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.6.0</div></div>';
+    + '<button class="nv" id="btnKeluar" title="Keluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.8.0</div></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => {
@@ -435,9 +437,15 @@ async function viewDetail(id) {
   if (s.lokasi_fisik) baris.push(["Lokasi Arsip Fisik", s.lokasi_fisik]);
   if (s.jenis === "keluar" && s.penandatangan) baris.push(["Penandatangan", s.penandatangan]);
   if (s.keterangan) baris.push(["Keterangan", s.keterangan]);
-  const barisBerkas = (l, bisaPindah) => '<li><span class="fic ' + (l.mime === "application/pdf" ? "dg" : "in") + '">' + ic(l.mime === "application/pdf" ? "filetext" : "image") + '</span><div><b>' + esc(l.nama_asli) + "</b><small>" + fmtUkuran(l.ukuran) + " - " + fmtTgl(l.diupload_pada) + '</small></div><span class="acts"><button class="fbtn" data-lihat="' + l.id + '" aria-label="Lihat berkas">' + ic("eye") + '</button><a class="fbtn" href="/api/lampiran/' + l.id + '/file?dl=1" aria-label="Unduh berkas">' + ic("download") + "</a>" + (bisaUbah ? '<button class="fbtn" data-fmenu="' + l.id + '" aria-label="Aksi lainnya" aria-expanded="false">' + ic("more") + '</button><span class="fmenu" id="fm-' + l.id + '" hidden>' + (bisaPindah ? '<button type="button" data-pindah="' + l.id + '" data-ke="' + (l.jenis_berkas === "lampiran_pendukung" ? "berkas_surat" : "lampiran_pendukung") + '">' + ic("arr-both") + (l.jenis_berkas === "lampiran_pendukung" ? "Jadikan Berkas Surat" : "Jadikan Pendukung") + "</button>" : "") + '<button type="button" class="red" data-hapus-lamp="' + l.id + '">' + ic("trash") + "Hapus lampiran</button></span>" : "") + "</span></li>";
-  let lamp = berkasUtama.length ? '<ul class="fi2">' + berkasUtama.map((l) => barisBerkas(l, s.jenis === "keluar")).join("") + "</ul>" : '<p class="mu">Berkas belum diunggah.</p>';
-  let lampPend = berkasPendukung.length ? '<ul class="fi2">' + berkasPendukung.map((l) => barisBerkas(l, true)).join("") + "</ul>" : '<p class="mu">Belum ada lampiran pendukung.</p>';
+  const barisBerkas = (l, bisaPindah) => {
+    const isImg = String(l.mime || "").startsWith("image/");
+    const isPdf = l.mime === "application/pdf";
+    const ext = (String(l.nama_asli).split(".").pop() || "").toUpperCase().slice(0, 4);
+    const media = isImg ? '<img class="th-img" src="/api/lampiran/' + l.id + '/file" alt="" loading="lazy">' : '<span class="th-ic ' + (isPdf ? "pdf" : "oth") + '">' + ic(isPdf ? "filetext" : "fileup") + "</span>";
+    return '<div class="th"><div class="th-media" data-lihat="' + l.id + '" title="Lihat berkas">' + media + '<span class="th-tp">' + esc(ext) + '</span></div><div class="th-nm">' + esc(l.nama_asli) + '</div><div class="th-mt">' + fmtUkuran(l.ukuran) + " - " + fmtTgl(l.diupload_pada) + '</div><div class="th-ac"><button class="fbtn" data-lihat="' + l.id + '" aria-label="Lihat berkas">' + ic("eye") + '</button><a class="fbtn" href="/api/lampiran/' + l.id + '/file?dl=1" aria-label="Unduh berkas">' + ic("download") + "</a>" + (bisaUbah ? '<button class="fbtn" data-fmenu="' + l.id + '" aria-label="Aksi lainnya" aria-expanded="false">' + ic("more") + '</button><span class="fmenu" id="fm-' + l.id + '" hidden>' + (bisaPindah ? '<button type="button" data-pindah="' + l.id + '" data-ke="' + (l.jenis_berkas === "lampiran_pendukung" ? "berkas_surat" : "lampiran_pendukung") + '">' + ic("arr-both") + (l.jenis_berkas === "lampiran_pendukung" ? "Jadikan Berkas Surat" : "Jadikan Pendukung") + "</button>" : "") + '<button type="button" class="red" data-hapus-lamp="' + l.id + '">' + ic("trash") + "Hapus lampiran</button></span>" : "") + "</div></div>";
+  };
+  let lamp = berkasUtama.length ? '<div class="thumbs">' + berkasUtama.map((l) => barisBerkas(l, s.jenis === "keluar")).join("") + "</div>" : '<p class="mu">Berkas belum diunggah.</p>';
+  let lampPend = berkasPendukung.length ? '<div class="thumbs">' + berkasPendukung.map((l) => barisBerkas(l, true)).join("") + "</div>" : '<p class="mu">Belum ada lampiran pendukung.</p>';
   let penugasanHtml = "";
   if (s.jenis === "keluar" && (s.jenis_penugasan || d.induk || (d.guru_ditugaskan || []).length)) {
     penugasanHtml = '<div class="card"><div class="ch"><h2>Penugasan</h2>' + (s.jenis_penugasan ? '<span class="bd in"><i class="dt"></i>' + esc(s.jenis_penugasan) + "</span>" : "") + '</div><div class="cb">'
@@ -509,7 +517,7 @@ async function viewDetail(id) {
       try { const r = await fetch("/api/surat/" + s.id + "/lampiran", { method: "POST", body: fd }); const dd = await r.json(); if (!r.ok) throw new Error(dd.error || "Gagal unggah"); toast("Lampiran terunggah: " + f.name); }
       catch (er) { toast(er.message, true); }
     }
-    viewDetail(s.id);
+    cacheGET.clear(); viewDetail(s.id);
   };
   const upP = $("#bUploadPendukung"); if (upP) upP.onclick = () => $("#filePendukung").click();
   $("#filePendukung").onchange = async (e) => {
@@ -519,7 +527,7 @@ async function viewDetail(id) {
       try { const r = await fetch("/api/surat/" + s.id + "/lampiran", { method: "POST", body: fd }); const dd = await r.json(); if (!r.ok) throw new Error(dd.error || "Gagal unggah"); toast("Lampiran pendukung terunggah: " + f.name); }
       catch (er) { toast(er.message, true); }
     }
-    viewDetail(s.id);
+    cacheGET.clear(); viewDetail(s.id);
   };
   const bki = $("#bKeInduk"); if (bki && d.induk) bki.onclick = () => { window._detailJenis = "masuk"; go("detail", d.induk.id); };
   $$("[data-turunan]").forEach((b) => (b.onclick = () => { window._detailJenis = "keluar"; go("detail", parseInt(b.dataset.turunan, 10)); }));
