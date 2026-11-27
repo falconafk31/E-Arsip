@@ -36,7 +36,6 @@ th[data-sk]{cursor:pointer;user-select:none} th[data-sk]:hover{color:var(--p)}
   <div class="app">
     <div class="ov" id="ovl"></div>
     <aside id="sb"></aside>
-    <button class="tgl" id="btnCiut" aria-label="Ciutkan bilah navigasi"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
     <div class="mn">
       <header class="top" id="topbar"></header>
       <main id="main"></main>
@@ -150,8 +149,8 @@ async function masukAplikasi() {
   if (rk) klasList = rk.items || [];
   SETTINGS = rs ? (rs.settings || rs || {}) : {};
   $("#loginView").hidden = true; $("#appView").hidden = false;
-  document.body.classList.toggle("ciut", (() => { try { return localStorage.getItem("ea_sb_ciut") === "1"; } catch (e) { return false; } })());
-  renderShell(); const bc = $("#btnCiut"); if (bc) { bc.setAttribute("aria-label", document.body.classList.contains("ciut") ? "Lebarkan bilah navigasi" : "Ciutkan bilah navigasi"); bc.onclick = () => { const c = !document.body.classList.contains("ciut"); document.body.classList.toggle("ciut", c); try { localStorage.setItem("ea_sb_ciut", c ? "1" : "0"); } catch (e) {} bc.setAttribute("aria-label", c ? "Lebarkan bilah navigasi" : "Ciutkan bilah navigasi"); }; } const pr = parseRute(); if (pr) go(pr.p, pr.arg); else go("beranda");
+  document.body.classList.toggle("ciut", (() => { try { return localStorage.getItem("ea_sb_ciut") !== "0"; } catch (e) { return true; } })());
+  renderShell(); const pr = parseRute(); if (pr) go(pr.p, pr.arg); else go("beranda");
 }
 async function keluar() { try { await api("/api/logout", { method: "POST" }); } catch (e) {} me = null; renderLogin(); }
 
@@ -184,6 +183,12 @@ function bukaFlyout(kunci, tombol) {
   $$("#sb .nv[aria-expanded]").forEach((b) => b.setAttribute("aria-expanded", b === tombol ? "true" : "false"));
   f.querySelectorAll("[data-fly]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); tutupFlyout(); cfg.tautan[parseInt(a.dataset.fly, 10)][1](); }));
 }
+function ikatCiut() {
+  const bc = $("#btnCiut"); if (!bc) return;
+  const segar = () => { const c = document.body.classList.contains("ciut"); bc.querySelector("use").setAttribute("href", c ? "#i-panelopen" : "#i-panelclose"); bc.querySelector(".nl").textContent = c ? "Lebarkan" : "Ciutkan"; bc.setAttribute("aria-label", c ? "Lebarkan bilah navigasi" : "Ciutkan bilah navigasi"); bc.setAttribute("title", c ? "Lebarkan bilah navigasi" : "Ciutkan bilah navigasi"); };
+  segar();
+  bc.onclick = () => { const c = !document.body.classList.contains("ciut"); document.body.classList.toggle("ciut", c); try { localStorage.setItem("ea_sb_ciut", c ? "1" : "0"); } catch (e) {} segar(); };
+}
 function renderShell() {
   let h = '<div class="br"><div class="bm">' + ic("arsip") + '</div><div class="bt"><b>E-Arsip</b><small class="nl">' + esc(namaInstansi()) + "</small></div></div>";
   h += '<nav class="sn">';
@@ -193,7 +198,7 @@ function renderShell() {
     for (const [k, label, ikon] of items) h += '<button class="nv" data-go="' + k + '" data-k="' + k + '" title="' + label + '">' + ic(ikon) + '<span class="nl">' + label + "</span>" + (k === "disposisi" ? '<span class="bdg" id="bdgDisp" hidden></span>' : "") + "</button>";
   }
   h += '</nav><div class="sf"><div class="us"><div class="av">' + esc(inisial(me.nama)) + '</div><div class="nl"><b>' + esc(me.nama) + "</b><small>" + esc(ROLE_LABEL[me.role] || me.role) + '</small></div></div>'
-    + '<button class="nv" id="btnKeluar" title="Keluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.8.1</div></div>';
+    + '<button class="nv" id="btnKeluar" title="Keluar">' + ic("logout") + '<span class="nl">Keluar</span></button><div class="sver">Versi 1.8.2</div><button class="tgl" id="btnCiut" title="Ciutkan bilah navigasi" aria-label="Ciutkan bilah navigasi">' + ic("panelclose") + '<span class="nl">Ciutkan</span></button></div>';
   if (!r2Aktif) h += '<div class="note wn" style="margin:12px 4px 0;font-size:12px">' + ic("warning") + "<span>Upload file belum aktif. Hubungi admin.</span></div>";
   $("#sb").innerHTML = h;
   $$("#sb [data-go]").forEach((b) => {
@@ -211,6 +216,7 @@ function renderShell() {
   }
   $("#btnKeluar").onclick = () => konfirmasi("Keluar dari E-Arsip?", "Sesi Anda akan diakhiri. Anda perlu masuk lagi untuk melanjutkan pekerjaan.", "Keluar", keluar);
   $("#ovl").onclick = () => document.body.classList.remove("nav");
+  ikatCiut();
   segarLencana();
 }
 async function segarLencana() {
