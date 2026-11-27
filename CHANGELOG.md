@@ -2,6 +2,13 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.8.1] - 2026-11-27
+
+### Diperbaiki
+
+- Halaman Detail di HP tidak lagi bergeser 18px ke samping pada surat bernomor panjang tanpa spasi (temuan QA live 27 Nov 2026, detail 129: scrollWidth 408). Penyebabnya kolom Detail di HP memakai `1fr` sehingga lebar minimumnya mengikuti konten (392px); kini memakai `minmax(0,1fr)` seperti di desktop. Detail 156 dan Beranda sudah benar sebelumnya dan tidak berubah.
+- Bilah bawah di HP (aksi Detail dan bilah formulir) tidak lagi nyangkut di atas laci navigasi saat laci dibuka: bilah disembunyikan selama laci terbuka dan muncul kembali sesudah laci ditutup. Penyebabnya bilah aksi Detail memakai `position:fixed` dengan z-index 40, lebih tinggi dari laci (z-index 30); bilah formulir juga tampil di atas tirai gelap (z-index 20).
+
 ## [1.8.0] - 2026-11-27
 
 ### Ditambahkan
