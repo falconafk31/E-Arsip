@@ -2,6 +2,17 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.8.2] - 2026-11-27
+
+### Ditambahkan
+- Tombol ciut bilah samping pindah ke paling bawah bilah (gaya Sedyatama): tombol lebar berlabel "Ciutkan" dengan ikon panel, bukan lagi lingkaran "<" melayang di tepi atas; saat diciutkan tinggal ikonnya saja.
+
+### Diubah
+- Navigasi desktop kini default diciutkan (72px, ikon saja) saat pertama dibuka; pilihan melebarkan tetap diingat seperti sebelumnya.
+
+### Diperbaiki
+- Tombol ciut tidak lagi hilang saat halaman di-scroll ke bawah: tombol kini berada di dalam bilah samping yang menempel di layar, jadi selalu terlihat di bawah.
+
 ## [1.8.1] - 2026-11-27
 
 ### Diperbaiki
