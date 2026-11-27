@@ -438,3 +438,40 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--p);vertical-align
 .fmenu button.red{color:var(--dg)}
 .fmenu button .ic{width:16px;height:16px}
 @media(max-width:960px){.dt2{grid-template-columns:1fr}}
+
+/* 1.7.0: bilah samping bisa diciutkan (desktop) */
+.tgl{display:none}
+@media(min-width:1025px){
+.app{position:relative;transition:grid-template-columns .22s ease}
+.tgl{position:absolute;left:264px;top:14px;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;background:#fff;color:var(--km9);border:1px solid var(--bd);box-shadow:0 2px 8px rgba(6,50,60,.25);display:grid;place-items:center;cursor:pointer;z-index:40}
+.tgl .ic{width:14px;height:14px;transform:rotate(180deg);transition:transform .22s ease}
+body.ciut .app{grid-template-columns:72px 1fr}
+body.ciut #sb{padding:12px 8px}
+body.ciut .nl,body.ciut .bt,body.ciut .sver{display:none}
+body.ciut .br{justify-content:center;padding:4px 0 16px}
+body.ciut .nv{justify-content:center;padding:0;border-left-width:0;position:relative}
+body.ciut .ng{font-size:0;padding:0;margin:10px 8px;border-top:1px solid rgba(255,255,255,.15)}
+body.ciut .us{justify-content:center;padding:4px 0 10px}
+body.ciut .nv .bdg{position:absolute;top:4px;right:4px;margin:0;min-width:16px;height:16px;font-size:9px;padding:0 4px}
+body.ciut .tgl{left:72px}
+body.ciut .tgl .ic{transform:rotate(0)}
+}
+
+/* 1.8.0: daftar berkas Detail jadi grid thumbnail sejajar */
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px;margin:10px 0 4px}
+.th{border:1px solid var(--bd);border-radius:10px;background:#fff;position:relative}
+.th-media{position:relative;display:block;cursor:pointer;border-radius:9px 9px 0 0;overflow:hidden;height:88px;background:#E9EEEC}
+.th-img{width:100%;height:100%;object-fit:cover;display:block}
+.th-ic{display:grid;place-items:center;height:100%}
+.th-ic.pdf{background:#FDE7E7;color:var(--dg)}
+.th-ic.oth{background:#EDF1EF;color:#4A5D54}
+.th-ic .ic{width:34px;height:34px}
+.th-tp{position:absolute;top:6px;left:6px;font-size:10px;font-weight:700;letter-spacing:.04em;background:#fff;border-radius:4px;padding:2px 6px;color:#4A5D54;box-shadow:0 1px 3px rgba(0,0,0,.14);z-index:2}
+.th-ic.pdf ~ .th-tp{color:var(--dg)}
+.th-img ~ .th-tp{color:var(--in)}
+.th-nm{font-size:12.5px;font-weight:600;padding:8px 10px 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35;min-height:34px;word-break:break-word}
+.th-mt{font-size:11px;color:var(--tm);padding:0 10px 8px}
+.th-ac{display:flex;gap:6px;padding:0 8px 10px;position:relative}
+.th-ac .fbtn{flex:1}
+.th-ac .fmenu{top:34px;z-index:20}
+@media(max-width:720px){.thumbs{grid-template-columns:repeat(2,1fr)}}

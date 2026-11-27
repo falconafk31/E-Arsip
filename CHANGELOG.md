@@ -2,6 +2,27 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.8.0] - 2026-11-27
+
+### Ditambahkan
+
+- Daftar berkas di halaman Detail kini tampil sebagai grid kartu thumbnail sejajar (perintah Hades 27 Nov 2026, varian "Gambar tampil foto aslinya"): tiap berkas jadi satu kartu berisi gambar atau ikon besar sesuai jenisnya, label jenis (PDF, JPG, PNG) di sudut kartu, nama berkas (maks 2 baris), ukuran + tanggal, dan tombol lihat/unduh/titik-tiga. Kartu gambar (JPG, PNG, WEBP) menampilkan foto aslinya sebagai miniatur; PDF memakai ikon dokumen merah dan tipe lain memakai ikon abu. Menu titik-tiga (pindah jenis, hapus) tetap bekerja dari tiap kartu. Berlaku untuk Berkas Surat (maks 5) dan Lampiran Pendukung; di HP grid menjadi 2 kolom. Mengklik gambar atau ikon kartu membuka berkasnya.
+
+### Diubah
+
+- Daftar baris lama (`.fi2`) untuk berkas surat dan lampiran pendukung diganti grid `.thumbs`. Daftar `.fi2` untuk guru ditugaskan, Surat Keluar Terkait, dan pilihan berkas di formulir tidak berubah.
+
+## [1.7.0] - 2026-11-27
+
+### Ditambahkan
+
+- Bilah samping desktop bisa diciutkan (perintah Hades 27 Nov 2026): tombol bulat "<" menempel di tepi bilah; bilah menyusut dari 264px jadi 72px ikon saja dan area konten melebar 192px. Keadaan tersimpan di peramban (dibuka lagi tetap ciut). Saat ciut, judul grup jadi garis pemisah, teks versi disembunyikan, lencana Disposisi pindah ke sudut ikon, dan nama menu tampil lewat tooltip saat kursor diarahkan ke ikon. Tablet (721-1024px) dan HP tidak berubah.
+- Logo E-Arsip baru, varian V2 Dokumen + Segel (dipilih Hades 27 Nov 2026): dokumen surat dengan segel centang hijau, menggantikan ikon letterhead di kepala bilah dan di halaman masuk. Ikon letterhead tetap dipakai untuk Kop Surat.
+
+### Diperbaiki
+
+- Berkas yang diunggah dari halaman Detail kini langsung tampil di daftar (laporan Hades 27 Nov 2026: toast "Lampiran terunggah: Laporan-Bulanan-November-2026.pdf" muncul tapi berkas tidak tampil). Penyebabnya cache GET di memori: unggah memakai fetch mentah sehingga pembersih cache di api() tidak jalan, lalu halaman Detail merender ulang dari data lama yang tersimpan di cache. Perbaikan: cache dibersihkan sesudah unggah Berkas Surat dan sesudah unggah Lampiran Pendukung, sebelum halaman Detail dimuat ulang. Berkas yang sudah terunggah sebelumnya tidak hilang, hanya tampilannya yang tertunda.
+
 ## [1.6.0] - 2026-11-27
 
 ### Ditambahkan
