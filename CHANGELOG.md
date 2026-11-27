@@ -2,6 +2,18 @@
 
 Semua perubahan penting E-Arsip dicatat di berkas ini. Format mengikuti Keep a Changelog, versi mengikuti Semantic Versioning.
 
+## [1.6.0] - 2026-11-27
+
+### Ditambahkan
+
+- Halaman Detail Surat gaya mockup redesain (disetujui Hades 27 Nov 2026, warna lama dipertahankan): judul halaman kini perihal surat (bukan nomor surat), tata letak dua kolom di desktop (kiri: kartu Berkas berisi pratinjau berkas pertama + daftar berkas + kotak unggah, kanan: kartu Data Surat + Penugasan + Disposisi + Riwayat), kartu tanpa penomoran. Di HP kolom menumpuk ke bawah. Kartu Penugasan menampilkan surat induk beserta tombol "Lihat Surat Masuk" dan guru ditugaskan dengan avatar inisial. Aksi berkas (lihat, unduh, pindah jenis, hapus) kini di tombol ikon; pindah jenis dan hapus berada di balik menu titik-tiga. Tombol "Tambah Disposisi" pindah dari kepala halaman ke kepala kartu Disposisi.
+- Pill status titik + label (gaya tangkapan Hades 27 Nov 2026): Belum (kuning), Diproses (biru), Selesai (hijau), Terlambat (merah), Terkirim (hijau), berlaku di Beranda, daftar Surat Masuk/Keluar, dan halaman Detail.
+- 11 ikon baru dari paket Lucide resmi (lisensi ISC) menggantikan ikon lama yang kurang jelas menurut audit Claude: menu Surat Keluar memakai send, Disposisi memakai clipboard-check, Pengaturan memakai sliders-horizontal, Audit memakai shield-check, Lihat Semua memakai chevron-right, berkas PDF memakai file-text, berkas belum diunggah memakai file-up, penanda Terlambat memakai clock-exclamation-point, tombol Proses memakai loader-circle, Tambah Disposisi memakai plus. Simbol lama tetap tersimpan di sprite bila masih dipakai di tempat lain.
+
+### Diubah
+
+- Warna dan palet aplikasi TIDAK berubah: gradasi bilah sisi hijau-biru dan palet EMISGTK tetap seperti 1.5.10. Tampilan HP tetap tabel geser (bukan kartu) dan tanpa navigasi bawah. Beranda, daftar, dan formulir Tambah Surat belum disentuh redesain ini.
+
 ## [1.5.10] - 2026-11-26
 
 ### Diubah
